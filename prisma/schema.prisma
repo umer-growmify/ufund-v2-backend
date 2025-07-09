@@ -26,15 +26,17 @@ model User {
   email             String   @unique
   firstName         String
   lastName          String
-  phoneNumber       String
-  password          String
+  phoneNumber       String?
+  countryCode       String?
+  password          String?    // now optional
   role              Role
   agreedToTerms     Boolean
   isVerified        Boolean  @default(false)
   verificationToken String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
+  provider          String?   // e.g., 'google', 'facebook'
+  providerId        String?   // external OAuth ID
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }
 
 

@@ -3,15 +3,16 @@ import {
   BadRequestException,
   NotFoundException,
   UnauthorizedException,
+  ConflictException,
 } from '@nestjs/common';
-import { LoginDto, RegisterDto } from './dto/auth.dto';
+import { LoginDto, RegisterDto, SocialUserDto } from './dto/auth.dto';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
 import * as nodemailer from 'nodemailer';
 import { PrismaClient } from '@prisma/client';
 import * as Mailgen from 'mailgen';
 import * as jwt from 'jsonwebtoken';
-
+import { Response } from 'express';
 const prisma = new PrismaClient();
 @Injectable()
 export class AuthService {
@@ -21,6 +22,7 @@ export class AuthService {
       firstName,
       lastName,
       phoneNumber,
+      countryCode,
       password,
       repeatPassword,
       agreedToTerms,
@@ -32,6 +34,7 @@ export class AuthService {
       !firstName ||
       !lastName ||
       !phoneNumber ||
+      !countryCode ||
       !password ||
       !repeatPassword ||
       agreedToTerms === undefined ||
@@ -43,7 +46,7 @@ export class AuthService {
     if (password !== repeatPassword) {
       throw new BadRequestException('Passwords do not match .');
     }
-    if (password.length < 6 && repeatPassword.length < 6) {
+    if (password.length < 6 || repeatPassword.length < 6) {
       throw new BadRequestException(
         'Password must be at least 6 characters long.',
       );
@@ -65,6 +68,7 @@ export class AuthService {
         email,
         firstName,
         lastName,
+        countryCode,
         phoneNumber,
         password: hashedPassword,
         role,
@@ -166,21 +170,81 @@ export class AuthService {
   async loginUser(dto: LoginDto, res: any) {
     const { email, password, rememberMe } = dto;
 
+    console.log(email, password, rememberMe);
+
+    if (!email || !password) {
+      throw new BadRequestException('Credentials are required');
+    }
+
     const user = await prisma.user.findUnique({ where: { email } });
+
+    console.log('user found:', user);
 
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
     if (!user.isVerified) {
-      throw new UnauthorizedException('Please verify your email before logging in');
+      throw new UnauthorizedException(
+        'Please verify your email before logging in',
+      );
     }
+    const isPasswordValid = await bcrypt.compare(password, user.password || '');
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    return this.generateTokenAndSetCookie(user, res, rememberMe);
+  }
+  async socialLogin(socialUser: SocialUserDto, res: Response) {
+    // Check if social account already exists
+    const existingSocialUser = await prisma.user.findFirst({
+      where: {
+        provider: socialUser.provider,
+        providerId: socialUser.providerId,
+      },
+    });
+
+    if (existingSocialUser) {
+      return this.generateTokenAndSetCookie(existingSocialUser, res, true);
+    }
+
+    // Check if email already exists (non-social account)
+    const existingEmailUser = await prisma.user.findUnique({
+      where: { email: socialUser.email },
+    });
+
+    if (existingEmailUser) {
+      throw new ConflictException(
+        'Email already registered with another method',
+      );
+    }
+
+    // Create new social user
+    const newUser = await prisma.user.create({
+      data: {
+        email: socialUser.email,
+        firstName: socialUser.firstName || '',
+        lastName: socialUser.lastName || '',
+        provider: socialUser.provider,
+        providerId: socialUser.providerId,
+        role: 'investor', // Default role
+        agreedToTerms: true, // Implicit agreement
+        isVerified: true, // Social providers verify emails
+        verificationToken: null,
+      }, // No token needed for social login
+    });
+
+    return this.generateTokenAndSetCookie(newUser, res, true);
+  }
+
+  // Helper for token generation and cookie setting
+  private generateTokenAndSetCookie(
+    user: any,
+    res: Response,
+    rememberMe: boolean = true,
+  ) {
     const payload = { id: user.id, role: user.role };
     const token = jwt.sign(payload, process.env.JWT_SECRET, {
       expiresIn: rememberMe ? '7d' : '1d',
@@ -190,10 +254,8 @@ export class AuthService {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: rememberMe ? 7 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000, // 30 days or 1 day
+      maxAge: rememberMe ? 7 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000,
     });
-
-
 
     return {
       success: true,

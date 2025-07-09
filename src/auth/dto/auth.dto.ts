@@ -1,12 +1,4 @@
-import {
-    IsBoolean,
-    IsEmail,
-    IsEnum,
-    IsNotEmpty,
-    IsPhoneNumber,
-    IsString,
-    MinLength
-} from 'class-validator';
+import { IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsOptional, IsPhoneNumber, IsString, MinLength } from 'class-validator';
 
 enum Role {
   investor = 'investor',
@@ -32,6 +24,10 @@ export class RegisterDto {
 
   @IsNotEmpty()
   @IsString()
+  countryCode: string;
+
+  @IsNotEmpty()
+  @IsString()
   @MinLength(6)
   password: string;
 
@@ -49,7 +45,7 @@ export class RegisterDto {
   role: Role;
 }
 
-export class LoginDto{
+export class LoginDto {
   @IsNotEmpty()
   @IsEmail()
   email: string;
@@ -58,7 +54,27 @@ export class LoginDto{
   @IsString()
   password: string;
 
-  // here is remember me 
   @IsBoolean()
   rememberMe?: boolean;
+}
+
+// Add new DTO for social login data
+export class SocialUserDto {
+  @IsNotEmpty()
+  provider: string;
+  
+  @IsNotEmpty()
+  providerId: string;
+  
+  @IsNotEmpty()
+  @IsEmail()
+  email: string;
+  
+  @IsOptional()
+  @IsString()
+  firstName?: string;
+  
+  @IsOptional()
+  @IsString()
+  lastName?: string;
 }

@@ -4,12 +4,39 @@
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
+
+
+//npx prisma migrate dev --name init
+// npx prisma generate         # ✅ Fixes your error
+// npx prisma migrate dev      # When you make schema changes
+// npx prisma studio           # View your DB
+//npx prisma db push
+
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String   @id @default(uuid())
+  email             String   @unique
+  firstName         String
+  lastName          String
+  phoneNumber       String
+  password          String
+  role              Role
+  agreedToTerms     Boolean
+  isVerified        Boolean  @default(false)
+  verificationToken String?
+  createdAt         DateTime @default(now())
+}
+
+
+enum Role {
+  investor
+  campaigner
 }

@@ -193,15 +193,7 @@ export class AuthService {
       maxAge: rememberMe ? 7 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000, // 30 days or 1 day
     });
 
-    res.cookie('userId', user.id, {
-      httpOnly: true,
-      maxAge: rememberMe ? 7 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000,
-    });
 
-    res.cookie('role', user.role, {
-      httpOnly: true,
-      maxAge: rememberMe ? 7 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000,
-    });
 
     return {
       success: true,

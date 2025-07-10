@@ -4,16 +4,19 @@ import {
   NotFoundException,
   UnauthorizedException,
   ConflictException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { LoginDto, RegisterDto, SocialUserDto } from './dto/auth.dto';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
 import * as nodemailer from 'nodemailer';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Role, User } from '@prisma/client';
 import * as Mailgen from 'mailgen';
 import * as jwt from 'jsonwebtoken';
 import { Response } from 'express';
+
 const prisma = new PrismaClient();
+
 @Injectable()
 export class AuthService {
   async registerUser(dto: RegisterDto) {
@@ -26,7 +29,7 @@ export class AuthService {
       password,
       repeatPassword,
       agreedToTerms,
-      role,
+      roles,
     } = dto;
 
     if (
@@ -38,13 +41,14 @@ export class AuthService {
       !password ||
       !repeatPassword ||
       agreedToTerms === undefined ||
-      !role
+      !roles || 
+      !roles.length
     ) {
       throw new BadRequestException('All fields are required.');
     }
 
     if (password !== repeatPassword) {
-      throw new BadRequestException('Passwords do not match .');
+      throw new BadRequestException('Passwords do not match.');
     }
     if (password.length < 6 || repeatPassword.length < 6) {
       throw new BadRequestException(
@@ -71,7 +75,7 @@ export class AuthService {
         countryCode,
         phoneNumber,
         password: hashedPassword,
-        role,
+        roles,  // Now storing array of roles
         agreedToTerms,
         isVerified: false,
         verificationToken,
@@ -118,7 +122,7 @@ export class AuthService {
 
     const emailBody = mailGenerator.generate({
       body: {
-        name: email.split('@')[0], // Or use full name if available
+        name: email.split('@')[0],
         intro: [
           'Welcome to uFund!',
           'One Platform to Power Your Investment Journey!',
@@ -127,7 +131,7 @@ export class AuthService {
           instructions:
             'To get started with uFund, please confirm your account:',
           button: {
-            color: '#22BC66', // Optional: uFund brand color
+            color: '#22BC66',
             text: 'Verify Your Email',
             link: `${process.env.BASE_URL}/api/v1/auth/verify/${token}`,
           },
@@ -167,18 +171,14 @@ export class AuthService {
     };
   }
 
-  async loginUser(dto: LoginDto, res: any) {
-    const { email, password, rememberMe } = dto;
+  async loginUser(dto: LoginDto, res: Response) {
+    const { email, password, rememberMe, activeRole } = dto;
 
-    console.log(email, password, rememberMe);
-
-    if (!email || !password) {
-      throw new BadRequestException('Credentials are required');
+    if (!email || !password || !activeRole) {
+      throw new BadRequestException('Credentials and role are required');
     }
 
     const user = await prisma.user.findUnique({ where: { email } });
-
-    console.log('user found:', user);
 
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
@@ -189,63 +189,94 @@ export class AuthService {
         'Please verify your email before logging in',
       );
     }
-    const isPasswordValid = await bcrypt.compare(password, user.password || '');
+
+    if (!user.password) {
+      throw new ForbiddenException('This account uses social login');
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    return this.generateTokenAndSetCookie(user, res, rememberMe);
+    // Add new role if not already present
+    if (!user.roles.includes(activeRole)) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          roles: { set: [...user.roles, activeRole] },
+        },
+      });
+    }
+
+    return this.generateTokenAndSetCookie(user, res, rememberMe, activeRole);
   }
+
   async socialLogin(socialUser: SocialUserDto, res: Response) {
+    const { email, provider, providerId, activeRole } = socialUser;
+
     // Check if social account already exists
     const existingSocialUser = await prisma.user.findFirst({
       where: {
-        provider: socialUser.provider,
-        providerId: socialUser.providerId,
+        provider,
+        providerId,
       },
     });
 
     if (existingSocialUser) {
-      return this.generateTokenAndSetCookie(existingSocialUser, res, true);
+      // Add new role if not already present
+      if (!existingSocialUser.roles.includes(activeRole)) {
+        const updatedUser = await prisma.user.update({
+          where: { id: existingSocialUser.id },
+          data: {
+            roles: { set: [...existingSocialUser.roles, activeRole] },
+          },
+        });
+        return this.generateTokenAndSetCookie(updatedUser, res, true, activeRole);
+      }
+      return this.generateTokenAndSetCookie(existingSocialUser, res, true, activeRole);
     }
 
     // Check if email already exists (non-social account)
     const existingEmailUser = await prisma.user.findUnique({
-      where: { email: socialUser.email },
+      where: { email },
     });
 
     if (existingEmailUser) {
-      throw new ConflictException(
-        'Email already registered with another method',
-      );
+      throw new ConflictException('Email already registered with another method');
     }
 
-    // Create new social user
+    // Create new social user with active role
     const newUser = await prisma.user.create({
       data: {
-        email: socialUser.email,
+        email,
         firstName: socialUser.firstName || '',
         lastName: socialUser.lastName || '',
-        provider: socialUser.provider,
-        providerId: socialUser.providerId,
-        role: 'investor', // Default role
-        agreedToTerms: true, // Implicit agreement
-        isVerified: true, // Social providers verify emails
+        provider,
+        providerId,
+        roles: [activeRole],  // Initialize with active role
+        agreedToTerms: true,
+        isVerified: true,
         verificationToken: null,
-      }, // No token needed for social login
+      },
     });
 
-    return this.generateTokenAndSetCookie(newUser, res, true);
+    return this.generateTokenAndSetCookie(newUser, res, true, activeRole);
   }
 
-  // Helper for token generation and cookie setting
   private generateTokenAndSetCookie(
-    user: any,
+    user: User,
     res: Response,
     rememberMe: boolean = true,
+    activeRole: Role,
   ) {
-    const payload = { id: user.id, role: user.role };
+    const payload = { 
+      id: user.id, 
+      roles: user.roles,  // Send all roles
+      activeRole,        // Send currently active role
+    };
+
     const token = jwt.sign(payload, process.env.JWT_SECRET, {
       expiresIn: rememberMe ? '7d' : '1d',
     });
@@ -262,7 +293,8 @@ export class AuthService {
       message: 'Login successful',
       user: {
         id: user.id,
-        role: user.role,
+        roles: user.roles,      // Return all roles
+        activeRole,             // Return active role
         email: user.email,
       },
     };

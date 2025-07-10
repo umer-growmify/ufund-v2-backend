@@ -1,4 +1,4 @@
-import { IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsOptional, IsPhoneNumber, IsString, MinLength } from 'class-validator';
+import { IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsOptional, IsPhoneNumber, IsString, MinLength, IsArray } from 'class-validator';
 
 enum Role {
   investor = 'investor',
@@ -41,8 +41,9 @@ export class RegisterDto {
   agreedToTerms: boolean;
 
   @IsNotEmpty()
-  @IsEnum(Role)
-  role: Role;
+  @IsArray()
+  @IsEnum(Role, { each: true })
+  roles: Role[];  // Changed to array of roles
 }
 
 export class LoginDto {
@@ -56,9 +57,12 @@ export class LoginDto {
 
   @IsBoolean()
   rememberMe?: boolean;
+
+  @IsNotEmpty()
+  @IsEnum(Role)
+  activeRole: Role;  // Added activeRole for role switching
 }
 
-// Add new DTO for social login data
 export class SocialUserDto {
   @IsNotEmpty()
   provider: string;
@@ -77,4 +81,8 @@ export class SocialUserDto {
   @IsOptional()
   @IsString()
   lastName?: string;
+  
+  @IsNotEmpty()
+  @IsEnum(Role)
+  activeRole: Role;  // Added activeRole for social login
 }

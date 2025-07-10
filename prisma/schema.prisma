@@ -4,14 +4,6 @@
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
-
-
-// npx prisma generate         # ✅ Fixes your error
-// npx prisma migrate dev      # When you make schema changes
-//npx prisma db push
-// npx prisma studio           # View your DB
-
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -28,17 +20,16 @@ model User {
   lastName          String
   phoneNumber       String?
   countryCode       String?
-  password          String?    // now optional
-  role              Role
+  password          String?
+  roles             Role[]   // Changed from single 'role' to array 'roles'
   agreedToTerms     Boolean
   isVerified        Boolean  @default(false)
   verificationToken String?
-  provider          String?   // e.g., 'google', 'facebook'
-  providerId        String?   // external OAuth ID
+  provider          String?
+  providerId        String?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 }
-
 
 enum Role {
   investor

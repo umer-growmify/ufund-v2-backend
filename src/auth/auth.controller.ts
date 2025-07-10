@@ -7,11 +7,13 @@ import {
   Res,
   Req,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { LoginDto, RegisterDto, SocialUserDto } from './dto/auth.dto';
 import { AuthService } from './auth.service';
 import { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
+import { Role } from '@prisma/client';
 
 @Controller('auth')
 export class AuthController {
@@ -32,60 +34,84 @@ export class AuthController {
     return this.authService.loginUser(dto, res);
   }
 
-  // Social login endpoints
+  // Social login endpoints with activeRole query parameter
   @Get('google')
   @UseGuards(AuthGuard('google'))
-  googleAuth() {
-    // Initiates Google OAuth flow
+  googleAuth(@Query('role') role: Role) {
+    // Initiates Google OAuth flow with role
   }
 
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
   async googleAuthCallback(@Req() req, @Res() res: Response) {
     const user = req.user;
-    await this.authService.socialLogin(user, res);
+    const activeRole = req.query.state as Role || 'investor';
+    
+    await this.authService.socialLogin({ 
+      ...user, 
+      activeRole: activeRole as Role 
+    }, res);
+    
     this.redirectToFrontend(res);
   }
 
   @Get('facebook')
   @UseGuards(AuthGuard('facebook'))
-  facebookAuth() {
-    // Initiates Facebook OAuth flow
+  facebookAuth(@Query('role') role: Role) {
+    // Initiates Facebook OAuth flow with role
   }
 
   @Get('facebook/callback')
   @UseGuards(AuthGuard('facebook'))
   async facebookAuthCallback(@Req() req, @Res() res: Response) {
     const user = req.user;
-    await this.authService.socialLogin(user, res);
+    const activeRole = req.query.state as Role || 'investor';
+    
+    await this.authService.socialLogin({ 
+      ...user, 
+      activeRole: activeRole as Role 
+    }, res);
+    
     this.redirectToFrontend(res);
   }
 
   @Get('linkedin')
   @UseGuards(AuthGuard('linkedin'))
-  linkedinAuth() {
-    // Initiates LinkedIn OAuth flow
+  linkedinAuth(@Query('role') role: Role) {
+    // Initiates LinkedIn OAuth flow with role
   }
 
   @Get('linkedin/callback')
   @UseGuards(AuthGuard('linkedin'))
   async linkedinAuthCallback(@Req() req, @Res() res: Response) {
     const user = req.user;
-    await this.authService.socialLogin(user, res);
+    const activeRole = req.query.state as Role || 'investor';
+    
+    await this.authService.socialLogin({ 
+      ...user, 
+      activeRole: activeRole as Role 
+    }, res);
+    
     this.redirectToFrontend(res);
   }
 
   @Get('twitter')
-  @UseGuards(AuthGuard('twitter')) // <-- Twitter OAuth 2.0
-  twitterAuth() {
-    // This route redirects to Twitter
+  @UseGuards(AuthGuard('twitter'))
+  twitterAuth(@Query('role') role: Role) {
+    // Initiates Twitter OAuth flow with role
   }
 
   @Get('twitter/callback')
   @UseGuards(AuthGuard('twitter'))
   async twitterAuthCallback(@Req() req, @Res() res: Response) {
     const user = req.user;
-    await this.authService.socialLogin(user, res);
+    const activeRole = req.query.state as Role || 'investor';
+    
+    await this.authService.socialLogin({ 
+      ...user, 
+      activeRole: activeRole as Role 
+    }, res);
+    
     this.redirectToFrontend(res);
   }
 

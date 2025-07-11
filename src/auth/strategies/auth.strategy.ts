@@ -1,22 +1,34 @@
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { Profile, Strategy } from 'passport-twitter-oauth2';
-
+import { ExtractJwt, Strategy as JwtStrategyBase } from 'passport-jwt';
+import {
+  Profile,
+  Strategy as TwitterOAuthStrategy,
+} from 'passport-twitter-oauth2'; // Renamed to avoid conflict
 // Google
-import { Strategy as GoogleStrategyBase, VerifyCallback as GoogleVerifyCallback } from 'passport-google-oauth20';
+import {
+  Strategy as GoogleStrategyBase,
+  VerifyCallback as GoogleVerifyCallback,
+} from 'passport-google-oauth20';
 
 // Facebook
-import { Strategy as FacebookStrategyBase, VerifyCallback as FacebookVerifyCallback } from 'passport-facebook';
+import {
+  Strategy as FacebookStrategyBase,
+  VerifyCallback as FacebookVerifyCallback,
+} from 'passport-facebook';
 
 // LinkedIn
-import { Strategy as LinkedInStrategyBase, VerifyCallback as LinkedInVerifyCallback } from 'passport-linkedin-oauth2';
-
-// Twitter
-
-
+import {
+  Strategy as LinkedInStrategyBase,
+  VerifyCallback as LinkedInVerifyCallback,
+} from 'passport-linkedin-oauth2';
+import { JwtPayload } from 'src/types/types';
 
 @Injectable()
-export class GoogleStrategy extends PassportStrategy(GoogleStrategyBase, 'google') {
+export class GoogleStrategy extends PassportStrategy(
+  GoogleStrategyBase,
+  'google',
+) {
   constructor() {
     super({
       clientID: process.env.GOOGLE_CLIENT_ID,
@@ -42,7 +54,10 @@ export class GoogleStrategy extends PassportStrategy(GoogleStrategyBase, 'google
 }
 
 @Injectable()
-export class FacebookStrategy extends PassportStrategy(FacebookStrategyBase, 'facebook') {
+export class FacebookStrategy extends PassportStrategy(
+  FacebookStrategyBase,
+  'facebook',
+) {
   constructor() {
     super({
       clientID: process.env.FB_CLIENT_ID,
@@ -63,12 +78,21 @@ export class FacebookStrategy extends PassportStrategy(FacebookStrategyBase, 'fa
     const firstName = name?.givenName;
     const lastName = name?.familyName;
 
-    done(null, { provider: 'facebook', providerId, email, firstName, lastName });
+    done(null, {
+      provider: 'facebook',
+      providerId,
+      email,
+      firstName,
+      lastName,
+    });
   }
 }
 
 @Injectable()
-export class LinkedInStrategy extends PassportStrategy(LinkedInStrategyBase, 'linkedin') {
+export class LinkedInStrategy extends PassportStrategy(
+  LinkedInStrategyBase,
+  'linkedin',
+) {
   constructor() {
     super({
       clientID: process.env.LINKEDIN_CLIENT_ID,
@@ -89,15 +113,22 @@ export class LinkedInStrategy extends PassportStrategy(LinkedInStrategyBase, 'li
     const firstName = name?.givenName;
     const lastName = name?.familyName;
 
-    done(null, { provider: 'linkedin', providerId, email, firstName, lastName });
+    done(null, {
+      provider: 'linkedin',
+      providerId,
+      email,
+      firstName,
+      lastName,
+    });
   }
 }
 
-// ✅ Twitter Strategy
+// Twitter Strategy
 @Injectable()
-// strategies.ts
-@Injectable()
-export class TwitterStrategy extends PassportStrategy(Strategy, 'twitter') {
+export class TwitterStrategy extends PassportStrategy(
+  TwitterOAuthStrategy,
+  'twitter',
+) {
   constructor() {
     super({
       clientID: process.env.TWITTER_CLIENT_ID,
@@ -107,10 +138,17 @@ export class TwitterStrategy extends PassportStrategy(Strategy, 'twitter') {
     });
   }
 
-  async validate(accessToken: string, refreshToken: string, profile: Profile, done: Function) {
+  async validate(
+    accessToken: string,
+    refreshToken: string,
+    profile: Profile,
+    done: Function,
+  ) {
     const { id: providerId, displayName, emails } = profile;
     const email = emails?.[0]?.value;
-    const [firstName, ...lastNameParts] = displayName?.split(' ') || ['TwitterUser'];
+    const [firstName, ...lastNameParts] = displayName?.split(' ') || [
+      'TwitterUser',
+    ];
     const lastName = lastNameParts.join(' ');
 
     done(null, {
@@ -120,5 +158,35 @@ export class TwitterStrategy extends PassportStrategy(Strategy, 'twitter') {
       firstName,
       lastName,
     });
+  }
+}
+
+// Fixed JWT Strategy
+@Injectable()
+export class JwtStrategy extends PassportStrategy(JwtStrategyBase) {
+  constructor() {
+    // Ensure JWT_SECRET is defined
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      throw new Error('JWT_SECRET environment variable is not defined');
+    }
+
+    super({
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        (req) => {
+          return req?.cookies?.token;
+        },
+      ]),
+      ignoreExpiration: false,
+      secretOrKey: jwtSecret,
+    });
+  }
+
+  async validate(payload: JwtPayload) {
+    return {
+      id: payload.id,
+      roles: payload.roles,
+      activeRole: payload.activeRole,
+    };
   }
 }

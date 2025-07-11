@@ -10,15 +10,17 @@ import { LoginDto, RegisterDto, SocialUserDto } from './dto/auth.dto';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
 import * as nodemailer from 'nodemailer';
-import { PrismaClient, Role, User } from '@prisma/client';
+import {  Role, User } from '@prisma/client';
 import * as Mailgen from 'mailgen';
 import * as jwt from 'jsonwebtoken';
 import { Response } from 'express';
-
-const prisma = new PrismaClient();
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class AuthService {
+
+  constructor(private readonly prisma: PrismaService) {}
+
   async registerUser(dto: RegisterDto) {
     const {
       email,
@@ -56,7 +58,7 @@ export class AuthService {
       );
     }
 
-    const existingUser = await prisma.user.findUnique({
+    const existingUser = await this.prisma.user.findUnique({
       where: { email },
     });
 
@@ -67,7 +69,7 @@ export class AuthService {
     const hashedPassword = await bcrypt.hash(password, 10);
     const verificationToken = crypto.randomBytes(32).toString('hex');
 
-    const user = await prisma.user.create({
+    const user = await this.prisma.user.create({
       data: {
         email,
         firstName,
@@ -150,14 +152,14 @@ export class AuthService {
   }
 
   async verifyUserEmail(token: string) {
-    const user = await prisma.user.findFirst({
+    const user = await this.prisma.user.findFirst({
       where: { verificationToken: token },
     });
 
     if (!user)
       throw new NotFoundException('Invalid or expired verification token');
 
-    await prisma.user.update({
+    await this.prisma.user.update({
       where: { id: user.id },
       data: {
         isVerified: true,
@@ -178,7 +180,7 @@ export class AuthService {
       throw new BadRequestException('Credentials and role are required');
     }
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await this.prisma.user.findUnique({ where: { email } });
 
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
@@ -202,7 +204,7 @@ export class AuthService {
 
     // Add new role if not already present
     if (!user.roles.includes(activeRole)) {
-      await prisma.user.update({
+      await this.prisma.user.update({
         where: { id: user.id },
         data: {
           roles: { set: [...user.roles, activeRole] },
@@ -217,7 +219,7 @@ export class AuthService {
     const { email, provider, providerId, activeRole } = socialUser;
 
     // Check if social account already exists
-    const existingSocialUser = await prisma.user.findFirst({
+    const existingSocialUser = await this.prisma.user.findFirst({
       where: {
         provider,
         providerId,
@@ -227,7 +229,7 @@ export class AuthService {
     if (existingSocialUser) {
       // Add new role if not already present
       if (!existingSocialUser.roles.includes(activeRole)) {
-        const updatedUser = await prisma.user.update({
+        const updatedUser = await this.prisma.user.update({
           where: { id: existingSocialUser.id },
           data: {
             roles: { set: [...existingSocialUser.roles, activeRole] },
@@ -239,7 +241,7 @@ export class AuthService {
     }
 
     // Check if email already exists (non-social account)
-    const existingEmailUser = await prisma.user.findUnique({
+    const existingEmailUser = await this.prisma.user.findUnique({
       where: { email },
     });
 
@@ -248,7 +250,7 @@ export class AuthService {
     }
 
     // Create new social user with active role
-    const newUser = await prisma.user.create({
+    const newUser = await this.prisma.user.create({
       data: {
         email,
         firstName: socialUser.firstName || '',
@@ -277,7 +279,7 @@ export class AuthService {
       activeRole,        // Send currently active role
     };
 
-    const token = jwt.sign(payload, process.env.JWT_SECRET, {
+    const token = jwt.sign(payload, process.env.JWT_SECRET!, {
       expiresIn: rememberMe ? '7d' : '1d',
     });
 

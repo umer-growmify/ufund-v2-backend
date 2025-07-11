@@ -6,7 +6,7 @@ import {
   SetMetadata,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { Role } from '@prisma/client';
+import { RoleType as Role } from '@prisma/client';
 import { Request } from 'express';
 
 export const ROLES_KEY = 'roles';

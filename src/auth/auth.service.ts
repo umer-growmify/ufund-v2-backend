@@ -10,7 +10,7 @@ import { LoginDto, RegisterDto, SocialUserDto } from './dto/auth.dto';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
 import * as nodemailer from 'nodemailer';
-import {  Role, User } from '@prisma/client';
+import {  RoleType as Role, User } from '@prisma/client';
 import * as Mailgen from 'mailgen';
 import * as jwt from 'jsonwebtoken';
 import { Response } from 'express';

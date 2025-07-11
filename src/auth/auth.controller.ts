@@ -13,7 +13,7 @@ import { LoginDto, RegisterDto, SocialUserDto } from './dto/auth.dto';
 import { AuthService } from './auth.service';
 import { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
-import { Role } from '@prisma/client';
+import { RoleType as Role } from '@prisma/client';
 
 @Controller('auth')
 export class AuthController {

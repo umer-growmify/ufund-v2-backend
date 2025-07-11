@@ -21,7 +21,7 @@ model User {
   phoneNumber       String?
   countryCode       String?
   password          String?
-  roles             Role[]   // Changed from single 'role' to array 'roles'
+  roles             RoleType[]   // Changed from single 'role' to array 'roles'
   agreedToTerms     Boolean
   isVerified        Boolean  @default(false)
   verificationToken String?
@@ -29,11 +29,68 @@ model User {
   providerId        String?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+  profile           Profile? 
+}
+
+model Profile {
+  id                  String           @id @default(uuid())
+  userId              String           @unique
+  user                User             @relation(fields: [userId], references: [id])
+  
+  // Financial Information
+  userAccountType     UserAccountType  @default(INDIVIDUAL)
+  incomeFrequency     IncomeFrequencyType @default(MONTHLY)
+  totalAnnualRevenue  Float           @default(0.0)
+  
+  // Personal Address
+  addressLine1        String
+  addressLine2        String?
+  zipCode             String
+  city                String
+  state               String
+  country             String
+  
+  // Company Information (if applicable)
+  companyName         String
+  companyEmail        String          @unique
+  companyTelephone    String
+  companyAddress      String
+  
+  // Banking Information
+  bankName            String
+  accountNumber       String           @unique
+  accountName         String
+  routingNumber       String
+  ibanNumber          String
+  swiftNumber         String
+  bankAccountType     BankAccountType  @default(PERSONAL)
+  bankAddress         String
+  
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
 }
 
 
-
-enum Role {
+enum RoleType {
   investor
   campaigner
+}
+
+enum UserAccountType {
+  INDIVIDUAL
+  MULTIPLE
+  CORPORATE
+}
+
+enum IncomeFrequencyType {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+enum BankAccountType {
+  PERSONAL
+  NON_PERSONAL
+  OTHER
 }

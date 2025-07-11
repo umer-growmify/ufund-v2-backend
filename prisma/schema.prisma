@@ -52,13 +52,13 @@ model Profile {
   
   // Company Information (if applicable)
   companyName         String
-  companyEmail        String          @unique
+  companyEmail        String         
   companyTelephone    String
   companyAddress      String
   
   // Banking Information
   bankName            String
-  accountNumber       String           @unique
+  accountNumber       String          
   accountName         String
   routingNumber       String
   ibanNumber          String

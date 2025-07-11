@@ -7,25 +7,24 @@ import {
   IsUUID,
   IsNumber,
 } from 'class-validator';
-import { UserAccountType, IncomeFrequencyType, BankAccountType } from '@prisma/client';
+import {
+  UserAccountType,
+  IncomeFrequencyType,
+  BankAccountType,
+} from '@prisma/client';
 
 export class CreateProfileDto {
-  @IsUUID()
-  @IsNotEmpty()
-  userId: string;
-
-  // Financial Information
   @IsEnum(UserAccountType)
-    @IsNotEmpty()
+  @IsNotEmpty()
   userAccountType: UserAccountType;
 
   @IsEnum(IncomeFrequencyType)
-    @IsNotEmpty()
+  @IsNotEmpty()
   incomeFrequency: IncomeFrequencyType;
 
   @IsNumber()
   @IsOptional()
-    @IsNotEmpty()
+  @IsNotEmpty()
   totalAnnualRevenue?: number;
 
   // Personal Address

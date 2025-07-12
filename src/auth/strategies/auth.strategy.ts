@@ -4,25 +4,21 @@ import { ExtractJwt, Strategy as JwtStrategyBase } from 'passport-jwt';
 import {
   Profile,
   Strategy as TwitterOAuthStrategy,
-} from 'passport-twitter-oauth2'; // Renamed to avoid conflict
-// Google
+} from 'passport-twitter-oauth2';
 import {
   Strategy as GoogleStrategyBase,
   VerifyCallback as GoogleVerifyCallback,
 } from 'passport-google-oauth20';
-
-// Facebook
 import {
   Strategy as FacebookStrategyBase,
   VerifyCallback as FacebookVerifyCallback,
 } from 'passport-facebook';
-
-// LinkedIn
 import {
   Strategy as LinkedInStrategyBase,
   VerifyCallback as LinkedInVerifyCallback,
 } from 'passport-linkedin-oauth2';
 import { JwtPayload } from 'src/types/types';
+import { Request } from 'express';
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(
@@ -123,7 +119,6 @@ export class LinkedInStrategy extends PassportStrategy(
   }
 }
 
-// Twitter Strategy
 @Injectable()
 export class TwitterStrategy extends PassportStrategy(
   TwitterOAuthStrategy,
@@ -161,9 +156,37 @@ export class TwitterStrategy extends PassportStrategy(
   }
 }
 
-// Fixed JWT Strategy
+// @Injectable()
+// export class JwtStrategy extends PassportStrategy(JwtStrategyBase) {
+//   constructor() {
+//     // Ensure JWT_SECRET is defined
+//     const jwtSecret = process.env.JWT_SECRET;
+//     if (!jwtSecret) {
+//       throw new Error('JWT_SECRET environment variable is not defined');
+//     }
+
+//     super({
+//       jwtFromRequest: ExtractJwt.fromExtractors([
+//         (req) => {
+//           return req?.cookies?.token || req.headers.authorization?.split(' ')[1];
+//         },
+//       ]),
+//       ignoreExpiration: false,
+//       secretOrKey: jwtSecret,  // Now guaranteed to be defined
+//     });
+//   }
+
+//   async validate(payload: JwtPayload) {
+//    return {
+//       id: payload.id,
+//       activeRole: payload.activeRole,
+//       type: payload.type,
+//     };
+//   }
+// }
+
 @Injectable()
-export class JwtStrategy extends PassportStrategy(JwtStrategyBase) {
+export class JwtStrategy extends PassportStrategy(JwtStrategyBase, 'jwt') {
   constructor() {
     // Ensure JWT_SECRET is defined
     const jwtSecret = process.env.JWT_SECRET;
@@ -173,20 +196,51 @@ export class JwtStrategy extends PassportStrategy(JwtStrategyBase) {
 
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
-        (req) => {
-          return req?.cookies?.token;
-        },
+        JwtStrategy.extractJWTFromCookies,
+        ExtractJwt.fromAuthHeaderAsBearerToken(),
       ]),
       ignoreExpiration: false,
       secretOrKey: jwtSecret,
     });
   }
 
+  private static extractJWTFromCookies(req: Request): string | null {
+    try {
+      // First check for admin token
+      if (req.cookies?.admin_token) {
+        return req.cookies.admin_token;
+      }
+
+      // Then check for regular user token
+      if (req.cookies?.token) {
+        return req.cookies.token;
+      }
+
+      // Check for token in Authorization header as fallback
+      if (req.headers.authorization) {
+        const authHeader = req.headers.authorization;
+        if (authHeader.startsWith('Bearer ')) {
+          return authHeader.substring(7);
+        }
+        return authHeader;
+      }
+    } catch (error) {
+      console.error('Error extracting JWT from cookies:', error);
+    }
+    return null;
+  }
+
   async validate(payload: JwtPayload) {
+    // For debugging - remove in production
+    console.log(
+      `Authenticated ${payload.type} with ID: ${payload.id}, Role: ${payload.activeRole}`,
+    );
+
     return {
       id: payload.id,
-      roles: payload.roles,
+      email: payload.email,
       activeRole: payload.activeRole,
+      type: payload.type,
     };
   }
 }

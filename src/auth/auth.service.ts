@@ -1,24 +1,23 @@
 import {
-  Injectable,
   BadRequestException,
-  NotFoundException,
-  UnauthorizedException,
   ConflictException,
   ForbiddenException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
-import { LoginDto, RegisterDto, SocialUserDto } from './dto/auth.dto';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
-import * as nodemailer from 'nodemailer';
-import {  RoleType as Role, User } from '@prisma/client';
-import * as Mailgen from 'mailgen';
-import * as jwt from 'jsonwebtoken';
 import { Response } from 'express';
 import { PrismaService } from 'src/prisma/prisma.service';
+import {
+  generateTokenAndSetCookie,
+  sendVerificationEmail,
+} from 'src/utils/auth.helper';
+import { LoginDto, RegisterDto, SocialUserDto } from './dto/auth.dto';
 
 @Injectable()
 export class AuthService {
-
   constructor(private readonly prisma: PrismaService) {}
 
   async registerUser(dto: RegisterDto) {
@@ -43,7 +42,7 @@ export class AuthService {
       !password ||
       !repeatPassword ||
       agreedToTerms === undefined ||
-      !roles || 
+      !roles ||
       !roles.length
     ) {
       throw new BadRequestException('All fields are required.');
@@ -77,14 +76,14 @@ export class AuthService {
         countryCode,
         phoneNumber,
         password: hashedPassword,
-        roles,  // Now storing array of roles
+        roles, // Now storing array of roles
         agreedToTerms,
         isVerified: false,
         verificationToken,
       },
     });
 
-    await this.sendVerificationEmail(
+    await sendVerificationEmail(
       user.email,
       verificationToken,
       user.firstName,
@@ -96,59 +95,6 @@ export class AuthService {
       message:
         'Registration successful. Please check your email to verify your account.',
     };
-  }
-
-  async sendVerificationEmail(
-    email: string,
-    token: string,
-    firstName?: string,
-    lastName?: string,
-  ) {
-    const transporter = nodemailer.createTransport({
-      host: process.env.MAILTRAP_HOST,
-      port: Number(process.env.MAILTRAP_PORT),
-      auth: {
-        user: process.env.MAILTRAP_USERNAME,
-        pass: process.env.MAILTRAP_PASSWORD,
-      },
-    });
-
-    const mailGenerator = new Mailgen({
-      theme: 'default',
-      product: {
-        name: 'uFund',
-        link: process.env.BASE_URL || 'http://localhost:3000',
-        copyright: `© ${new Date().getFullYear()} uFund. All rights reserved.`,
-      },
-    });
-
-    const emailBody = mailGenerator.generate({
-      body: {
-        name: email.split('@')[0],
-        intro: [
-          'Welcome to uFund!',
-          'One Platform to Power Your Investment Journey!',
-        ],
-        action: {
-          instructions:
-            'To get started with uFund, please confirm your account:',
-          button: {
-            color: '#22BC66',
-            text: 'Verify Your Email',
-            link: `${process.env.BASE_URL}/api/v1/auth/verify/${token}`,
-          },
-        },
-        outro:
-          'If you did not sign up for uFund, you can safely ignore this email.',
-      },
-    });
-
-    await transporter.sendMail({
-      from: process.env.MAILTRAP_SENDEREMAIL,
-      to: email,
-      subject: 'Welcome to uFund! Confirm Your Email',
-      html: emailBody,
-    });
   }
 
   async verifyUserEmail(token: string) {
@@ -212,7 +158,7 @@ export class AuthService {
       });
     }
 
-    return this.generateTokenAndSetCookie(user, res, rememberMe, activeRole);
+    return generateTokenAndSetCookie(user, res, rememberMe, activeRole);
   }
 
   async socialLogin(socialUser: SocialUserDto, res: Response) {
@@ -235,9 +181,14 @@ export class AuthService {
             roles: { set: [...existingSocialUser.roles, activeRole] },
           },
         });
-        return this.generateTokenAndSetCookie(updatedUser, res, true, activeRole);
+        return generateTokenAndSetCookie(updatedUser, res, true, activeRole);
       }
-      return this.generateTokenAndSetCookie(existingSocialUser, res, true, activeRole);
+      return generateTokenAndSetCookie(
+        existingSocialUser,
+        res,
+        true,
+        activeRole,
+      );
     }
 
     // Check if email already exists (non-social account)
@@ -246,7 +197,9 @@ export class AuthService {
     });
 
     if (existingEmailUser) {
-      throw new ConflictException('Email already registered with another method');
+      throw new ConflictException(
+        'Email already registered with another method',
+      );
     }
 
     // Create new social user with active role
@@ -257,48 +210,13 @@ export class AuthService {
         lastName: socialUser.lastName || '',
         provider,
         providerId,
-        roles: [activeRole],  // Initialize with active role
+        roles: [activeRole], // Initialize with active role
         agreedToTerms: true,
         isVerified: true,
         verificationToken: null,
       },
     });
 
-    return this.generateTokenAndSetCookie(newUser, res, true, activeRole);
-  }
-
-  private generateTokenAndSetCookie(
-    user: User,
-    res: Response,
-    rememberMe: boolean = true,
-    activeRole: Role,
-  ) {
-    const payload = { 
-      id: user.id, 
-      roles: user.roles,  // Send all roles
-      activeRole,        // Send currently active role
-    };
-
-    const token = jwt.sign(payload, process.env.JWT_SECRET!, {
-      expiresIn: rememberMe ? '7d' : '1d',
-    });
-
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: rememberMe ? 7 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000,
-    });
-
-    return {
-      success: true,
-      message: 'Login successful',
-      user: {
-        id: user.id,
-        roles: user.roles,      // Return all roles
-        activeRole,             // Return active role
-        email: user.email,
-      },
-    };
+    return generateTokenAndSetCookie(newUser, res, true, activeRole);
   }
 }

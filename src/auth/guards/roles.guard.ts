@@ -1,46 +1,53 @@
+// src/auth/guards/roles.guard.ts
 import {
   CanActivate,
   ExecutionContext,
   ForbiddenException,
   Injectable,
   SetMetadata,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { RoleType as Role } from '@prisma/client';
+import { RoleType, AdminRoleType } from '@prisma/client';
 import { Request } from 'express';
 
+type AnyRole = RoleType | AdminRoleType;
+
 export const ROLES_KEY = 'roles';
-export const Roles = (...roles: Role[]) => SetMetadata(ROLES_KEY, roles);
+export const Roles = (...roles: AnyRole[]) => SetMetadata(ROLES_KEY, roles);
 
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
+    const requiredRoles = this.reflector.getAllAndOverride<AnyRole[]>(ROLES_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
 
-    // If no roles are specified, allow all authenticated users
+    // No roles required = public endpoint
     if (!requiredRoles || requiredRoles.length === 0) {
       return true;
     }
 
     const request = context.switchToHttp().getRequest<Request>();
-    const user = request.user as { id: string; roles: Role[]; activeRole: Role };
+    const user = request.user as any;
 
-    // If user doesn't have activeRole, deny access
-    if (!user?.activeRole) {
-      throw new ForbiddenException('No active role assigned');
+    // No user = not authenticated
+    if (!user) {
+      throw new UnauthorizedException('Not authenticated');
     }
 
-    // Check if user's active role is in the required roles
-    const hasRequiredRole = requiredRoles.includes(user.activeRole);
+    // SUPER_ADMIN has full access
+    if (user.activeRole === 'SUPER_ADMIN') {
+      return true;
+    }
 
-    if (!hasRequiredRole) {
+    // Check if user has required role
+    if (!requiredRoles.includes(user.activeRole)) {
       throw new ForbiddenException(
-        `You need one of these roles: ${requiredRoles.join(', ')}`,
+        `Required role: ${requiredRoles.join(' or ')}`
       );
     }
 

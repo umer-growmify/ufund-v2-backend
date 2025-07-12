@@ -1,28 +1,18 @@
 import {
   Body,
   Controller,
-  Post,
   Get,
-  UseGuards,
-  Req,
   NotFoundException,
+  Post,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
-import { ProfileService } from './profile.service';
+import { AdminRoleType, RoleType as Role, RoleType } from '@prisma/client';
+import { RequestWithUser } from 'src/types/types';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/guards/roles.guard';
-import { RoleType as Role } from '@prisma/client';
-import { Request } from 'express';
+import { Roles, RolesGuard } from '../auth/guards/roles.guard';
 import { CreateProfileDto } from './dto/profile.dto';
-
-// Add this interface to define the user object structure
-interface RequestWithUser extends Request {
-  user: {
-    id: string;
-    roles: Role[];
-    activeRole: Role;
-  };
-}
+import { ProfileService } from './profile.service';
 
 @Controller('profile')
 export class ProfileController {
@@ -37,15 +27,20 @@ export class ProfileController {
   ) {
     // Ensure user is creating their own profile
     const userId = req.user.id;
-    console.log(`Fetching profile for user ID: ${userId}`);
-
-    if (!userId ) {
+    console.log(`Creating profile for user ID: ${userId}`);
+    
+    if (!userId) {
       throw new NotFoundException('User not found');
     }
 
-    
-
-    return this.profileService.createProfile(createProfileDto, userId);
+    const createProfile = this.profileService.createProfile(
+      createProfileDto,
+      userId,
+    );
+    if (!createProfile) {
+      throw new NotFoundException('Profile not created');
+    }
+    return createProfile;
   }
 
   @Get('me')
@@ -54,14 +49,13 @@ export class ProfileController {
   async getProfile(@Req() req: RequestWithUser) {
     // Use the custom interface
     const userId = req.user.id;
-    console.log(`Fetching profile for user ID: ${userId}`);
-    
-    const profile = await this.profileService.getProfile(userId);
 
-    // if (!profile) {
-    //   throw new NotFoundException('Profile not found');
-    // }
+    const getProfile = await this.profileService.getProfile(userId);
 
-    return profile;
+    if (!getProfile) {
+      throw new NotFoundException('Profile not found');
+    }
+
+    return getProfile;
   }
 }

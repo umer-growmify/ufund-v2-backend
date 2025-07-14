@@ -31,6 +31,9 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
+    console.log(`Required roles: ${requiredRoles.join(', ')}`);
+    
+
     const request = context.switchToHttp().getRequest<Request>();
     const user = request.user as any;
 
@@ -46,6 +49,7 @@ export class RolesGuard implements CanActivate {
 
     // Check if user has required role
     if (!requiredRoles.includes(user.activeRole)) {
+      console.log(`User role: ${user.activeRole}`);
       throw new ForbiddenException(
         `Required role: ${requiredRoles.join(' or ')}`
       );

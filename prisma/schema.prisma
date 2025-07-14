@@ -76,11 +76,23 @@ model Admin {
   name      String
   email     String        @unique
   password  String
-  role      AdminRoleType @default(SUPER_ADMIN)
+  role      AdminRoleType
   // picture         String?
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 }
+
+model Category {
+  id           String       @id @default(uuid())
+  name         String       @unique
+  imageUrl     String       @default("https://example.com/default-category-image.png") //this will remove after amazon s3 integration
+  categoryType CategoryType
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ======================== Enums ========================
 
 enum RoleType {
   investor
@@ -113,4 +125,9 @@ enum AdminRoleType {
   PRODUCT_CROWDFUNDING
   TOKEN_MANAGEMENT
   FINANCE
+}
+
+enum CategoryType {
+  PRODUCT
+  TOKEN
 }

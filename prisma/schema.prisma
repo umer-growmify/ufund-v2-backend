@@ -36,7 +36,7 @@ model User {
 model Profile {
   id     String @id @default(uuid())
   userId String @unique
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   // picture         String?
 
   // Financial Information
@@ -119,7 +119,7 @@ model Products {
 
   // Relation with Category (One-to-One)
   categoryId String   @unique
-  category   Category @relation(fields: [categoryId], references: [id])
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
   totalValue        Float
   investmentProfit  Float // in percentage
@@ -129,7 +129,7 @@ model Products {
 
   // Relation with User (campaigner)
   campaignerId String?
-  campaigner   User?   @relation(fields: [campaignerId], references: [id])
+  campaigner   User?   @relation(fields: [campaignerId], references: [id], onDelete: Cascade)
 
   description String
 
@@ -190,7 +190,7 @@ enum CategoryType {
 }
 
 enum RiskScale {
-  SECURE
-  LOW_RISK
-  HIGH_RISK
+  LOW
+  MEDIUM
+  HIGH
 }

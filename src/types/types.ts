@@ -1,6 +1,5 @@
 import { AdminRoleType, RoleType } from "@prisma/client";
 import { Request } from "express";
-import { Role } from "generated/prisma";
 
 
 export type JwtPayload = {

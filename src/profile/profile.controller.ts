@@ -7,7 +7,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { AdminRoleType, RoleType as Role, RoleType } from '@prisma/client';
+import { RoleType as Role } from '@prisma/client';
 import { RequestWithUser } from 'src/types/types';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Roles, RolesGuard } from '../auth/guards/roles.guard';

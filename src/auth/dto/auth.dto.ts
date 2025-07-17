@@ -1,4 +1,5 @@
 import { IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsOptional, IsPhoneNumber, IsString, MinLength, IsArray } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 enum Role {
   investor = 'investor',
@@ -6,83 +7,103 @@ enum Role {
 }
 
 export class RegisterDto {
+  @ApiProperty({ example: 'john@example.com' })
   @IsNotEmpty()
   @IsEmail()
   email: string;
 
+  @ApiProperty({ example: 'John' })
   @IsString()
   @IsNotEmpty()
   firstName: string;
 
+  @ApiProperty({ example: 'Doe' })
   @IsString()
   @IsNotEmpty()
   lastName: string;
 
+  @ApiProperty({ example: '+923001234567' })
   @IsNotEmpty()
   @IsPhoneNumber()
   phoneNumber: string;
 
+  @ApiProperty({ example: '+92' })
   @IsNotEmpty()
   @IsString()
   countryCode: string;
 
+  @ApiProperty({ example: 'password123' })
   @IsNotEmpty()
   @IsString()
   @MinLength(6)
   password: string;
 
+  @ApiProperty({ example: 'password123' })
   @IsNotEmpty()
   @IsString()
   @MinLength(6)
   repeatPassword: string;
 
+  @ApiProperty({ example: true })
   @IsNotEmpty()
   @IsBoolean()
   agreedToTerms: boolean;
 
+  @ApiProperty({ example: ['investor'], isArray: true, enum: Role })
   @IsNotEmpty()
   @IsArray()
   @IsEnum(Role, { each: true })
-  roles: Role[];  // Changed to array of roles
+  roles: Role[];
 }
 
 export class LoginDto {
+  @ApiProperty({ example: 'john@example.com' })
   @IsNotEmpty()
   @IsEmail()
   email: string;
 
+  @ApiProperty({ example: 'password123' })
   @IsNotEmpty()
   @IsString()
   password: string;
 
+  @ApiPropertyOptional({ example: true })
   @IsBoolean()
+  @IsOptional()
   rememberMe?: boolean;
 
+  @ApiProperty({ example: 'investor', enum: Role })
   @IsNotEmpty()
   @IsEnum(Role)
-  activeRole: Role;  // Added activeRole for role switching
+  activeRole: Role;
 }
 
 export class SocialUserDto {
+  @ApiProperty({ example: 'google' })
   @IsNotEmpty()
   provider: string;
-  
+
+  @ApiProperty({ example: 'google-123456' })
   @IsNotEmpty()
   providerId: string;
-  
+
+  @ApiProperty({ example: 'john@example.com' })
   @IsNotEmpty()
   @IsEmail()
   email: string;
-  
+
+  @ApiPropertyOptional({ example: 'John' })
   @IsOptional()
   @IsString()
   firstName?: string;
-  
+
+  @ApiPropertyOptional({ example: 'Doe' })
   @IsOptional()
   @IsString()
   lastName?: string;
-  
+
+  @ApiProperty({ example: 'investor', enum: Role })
   @IsNotEmpty()
   @IsEnum(Role)
-  activeRole: Role;  // Added activeRole for social login
+  activeRole: Role;
 }

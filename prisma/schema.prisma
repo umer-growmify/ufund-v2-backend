@@ -89,14 +89,15 @@ model Category {
   imageUrl     String       @default("https://example.com/default-category-image.png") //this will remove after amazon s3 integration
   categoryType CategoryType
   product      Products?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  assets       Asset[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 }
 
 model AssetType {
   id        String   @id @default(uuid())
   name      String   @unique
+  assets    Asset?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -104,6 +105,7 @@ model AssetType {
 model TokenType {
   id        String   @id @default(uuid())
   name      String   @unique
+  assets    Asset?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -144,6 +146,42 @@ model Products {
   auditorsReportUrl String // PDF file URL
   tokenImageUrl     String // Token image URL
   assetImageUrl     String // Asset image URL
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Asset {
+  id              String @id @default(uuid())
+  assetName       String
+  tokenName       String
+  tokenValue      String
+  tokenSymbol     String
+  tokenSupply     String
+  decimal         Int // Changed from Float to Int
+  auditorsName    String
+  adminCommission Float // Fixed spelling
+  assetValue      Float
+
+  // Relations (FKs)
+  categoryId String @unique
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  assetTypeId String @unique
+  assetType   AssetType @relation(fields: [assetTypeId], references: [id], onDelete: Cascade)
+
+  tokenTypeId String @unique
+  tokenType   TokenType @relation(fields: [tokenTypeId], references: [id], onDelete: Cascade)
+
+  offerStartDate    DateTime
+  offerEndDate      DateTime
+  rewardDate        DateTime? // Added missing field
+  rewardDescription String? // Added missing field
+  riskScale         RiskScale
+
+  auditorsReportUrl String
+  tokenImageUrl     String
+  assetImageUrl     String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

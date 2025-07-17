@@ -6,9 +6,10 @@ import { ProfileModule } from './profile/profile.module';
 import { AdminModule } from './admin/admin.module';
 import { CategoryModule } from './category/category.module';
 import { ProductsModule } from './products/products.module';
+import { AssetModule } from './asset/asset.module';
 
 @Module({
-  imports: [AuthModule, ProfileModule, AdminModule, CategoryModule, ProductsModule],
+  imports: [AuthModule, ProfileModule, AdminModule, CategoryModule, ProductsModule, AssetModule],
   controllers: [AppController],
   providers: [AppService],
 })

@@ -31,6 +31,7 @@ model User {
   updatedAt         DateTime   @updatedAt
   profile           Profile?
   Products          Products[]
+  Asset Asset[]
 }
 
 model Profile {
@@ -88,7 +89,7 @@ model Category {
   name         String       @unique
   imageUrl     String       @default("https://example.com/default-category-image.png") //this will remove after amazon s3 integration
   categoryType CategoryType
-  product      Products?
+  product      Products[]
   assets       Asset[]
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
@@ -120,7 +121,7 @@ model Products {
   upcCode          String
 
   // Relation with Category (One-to-One)
-  categoryId String   @unique
+  categoryId String   
   category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
   totalValue        Float
@@ -132,6 +133,8 @@ model Products {
   // Relation with User (campaigner)
   campaignerId String?
   campaigner   User?   @relation(fields: [campaignerId], references: [id], onDelete: Cascade)
+
+  creatorId String?
 
   description String
 
@@ -173,9 +176,13 @@ model Asset {
   tokenTypeId String @unique
   tokenType   TokenType @relation(fields: [tokenTypeId], references: [id], onDelete: Cascade)
 
+   userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   offerStartDate    DateTime
   offerEndDate      DateTime
   rewardDate        DateTime? // Added missing field
+
   rewardDescription String? // Added missing field
   riskScale         RiskScale
 

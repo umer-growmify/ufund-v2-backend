@@ -1,82 +1,69 @@
 import {
   BadRequestException,
   Injectable,
-  NotFoundException,
+  UnauthorizedException
 } from '@nestjs/common';
-import { CreateProductDto, UpdateProductDto } from './dto/product.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { CreateProductDto, UpdateProductDto } from './dto/product.dto';
 
 @Injectable()
 export class ProductsService {
   constructor(private readonly prisma: PrismaService) {}
-  async create(
-    createProductDto: CreateProductDto,
-    id: string, // User ID from token/cookie
-    activeRole: string,
-    userType: string,
-  ) {
-    // Validate user ID exists
-    if (!id) {
-      throw new NotFoundException('User ID not found');
-    }
+async createProduct(
+  createProductDto: CreateProductDto,
+  id: string,
+  activeRole: string,
+  userType: string,
+) {
+  console.log(`User ID ${id} User active Role ${activeRole} user Type ${userType}`);
 
-    let campaignerId: string;
-
-    // Determine campaigner ID based on user type
-    if (userType === 'admin') {
-      // Admin: Get campaigner ID from DTO
+  if (userType === 'admin') {
+    try {
       if (!createProductDto.campaignerId) {
-        throw new BadRequestException(
-          'campaignerId is required for admin users',
-        );
+        throw new BadRequestException('Campaigner ID is required');
       }
-      campaignerId = createProductDto.campaignerId;
-    } else if (userType === 'user' && activeRole === 'campaigner') {
-      // Non-admin: Use ID from token/cookie
-      campaignerId = id;
-    } else {
-      throw new BadRequestException('Invalid user type or role');
+
+      const campaignerExists = await this.prisma.user.findUnique({
+        where: { id: createProductDto.campaignerId },
+        select: { roles: true },
+      });
+
+      if (!campaignerExists) throw new BadRequestException('Invalid campaigner ID');
+      if (!campaignerExists.roles.includes('campaigner')) throw new BadRequestException('User is not a campaigner');
+
+      const createProduct = await this.prisma.products.create({
+        data: {
+          ...createProductDto,
+          creatorId: id,
+        },
+      });
+
+      return { success: true, message: 'Product Created Successfully', data: createProduct };
+    } catch (error) {
+      console.error(error);
+      throw new BadRequestException(error.message || 'Product Not created');
     }
-
-    // Verify campaigner exists
-    const campaigner = await this.prisma.user.findUnique({
-      where: { id: campaignerId },
-    });
-
-    if (!campaigner) {
-      throw new NotFoundException('Campaigner not found');
+  } else if (activeRole === 'campaigner') {
+    console.log("Creating product by campaigner...");
+    try {
+      const createProduct = await this.prisma.products.create({
+        data: {
+          ...createProductDto,
+          campaignerId: id,
+          creatorId: id,
+        },
+      });
+      console.log(createProduct);
+      return { success: true, message: 'Product Created Successfully', data: createProduct };
+    } catch (error) {
+      console.error(error);
+      throw new BadRequestException(error.message || 'Product Not created');
     }
-
-    // Verify category exists
-    const category = await this.prisma.category.findFirst({
-      where: {
-        id: createProductDto.categoryId,
-        categoryType: 'PRODUCT',
-      },
-    });
-
-    if (!category) {
-      throw new BadRequestException('Invalid category or category type');
-    }
-
-    // Create product with proper dates
-    const createProduct = await this.prisma.products.create({
-      data: {
-        ...createProductDto,
-        campaignerId,
-        offerStartDate: new Date(createProductDto.offerStartDate),
-        offerEndDate: new Date(createProductDto.offerEndDate),
-        investmentStartDate: new Date(createProductDto.investmentStartDate),
-        maturityDate: new Date(createProductDto.maturityDate),
-      },
-    });
-
-    return {
-      success: true,
-      message: 'Product created successfully',
-      data: createProduct,
-    };
   }
+
+  throw new UnauthorizedException('Invalid Role');
+}
+
 
   async getAllProducts() {
     const getAllProducts = await this.prisma.products.findMany({
@@ -90,7 +77,7 @@ export class ProductsService {
       success: true,
       message: 'Products retrieved successfully',
       data: getAllProducts,
-    }
+    };
   }
 
   findOne(id: number) {

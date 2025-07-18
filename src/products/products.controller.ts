@@ -31,7 +31,7 @@ export class ProductsController {
     const activeRole = req.user.activeRole;
     const userType = req.user.type;
     const id = req.user.id;
-    return this.productsService.create(
+    return this.productsService.createProduct(
       createProductDto,
       id,
       activeRole,

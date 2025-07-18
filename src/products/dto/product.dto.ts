@@ -78,6 +78,11 @@ export class CreateProductDto {
   @IsOptional()
   @IsUUID()
   campaignerId?: string;
+  
+  @ApiPropertyOptional({ example: 'uuid-of-creator', description: 'Optional user ID who created it' })
+  @IsOptional()
+  @IsUUID()
+  creatorId?: string
 
   @ApiProperty({ example: 'Latest high-end smartphone from Apple', description: 'Description of the product' })
   @IsString()

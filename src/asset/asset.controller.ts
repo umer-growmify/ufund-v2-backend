@@ -43,7 +43,7 @@ export class AssetController {
   @ApiResponse({
     status: 403,
     description: 'Forbidden - Only  SUPER_ADMIN or campaigner can create asset',
-  })
+  }) 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(AdminRoleType.SUPER_ADMIN, RoleType.campaigner)
   createAsset(@Body() createAssetDto: CreateAssetDto,@Req() req: RequestWithUser,) {

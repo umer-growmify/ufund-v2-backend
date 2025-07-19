@@ -24,7 +24,7 @@ export class ProductsController {
   @ApiResponse({ status: 403, description: 'Forbidden - Only campaigner or SUPER_ADMIN can create product' })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(AdminRoleType.SUPER_ADMIN, RoleType.campaigner)
-  create(
+  createProduct(
     @Body() createProductDto: CreateProductDto,
     @Req() req: RequestWithUser,
   ) {
@@ -44,7 +44,7 @@ export class ProductsController {
   @ApiResponse({ status: 200, description: 'List of all products returned' })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(AdminRoleType.SUPER_ADMIN, RoleType.campaigner, RoleType.investor)
-  findAll() {
+  getAllProducts() {
     return this.productsService.getAllProducts();
   }
 

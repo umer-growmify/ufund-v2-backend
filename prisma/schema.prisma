@@ -31,7 +31,7 @@ model User {
   updatedAt         DateTime   @updatedAt
   profile           Profile?
   Products          Products[]
-  Asset Asset[]
+  Asset             Asset[]
 }
 
 model Profile {
@@ -98,7 +98,7 @@ model Category {
 model AssetType {
   id        String   @id @default(uuid())
   name      String   @unique
-  assets    Asset?
+  assets    Asset[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -106,7 +106,7 @@ model AssetType {
 model TokenType {
   id        String   @id @default(uuid())
   name      String   @unique
-  assets    Asset?
+  assets    Asset[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -121,7 +121,7 @@ model Products {
   upcCode          String
 
   // Relation with Category (One-to-One)
-  categoryId String   
+  categoryId String
   category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
   totalValue        Float
@@ -163,25 +163,27 @@ model Asset {
   tokenSupply     String
   decimal         Int // Changed from Float to Int
   auditorsName    String
-  adminCommission Float // Fixed spelling
+  adminCommission Float // Fixed spelling 
   assetValue      Float
 
   // Relations (FKs)
-  categoryId String @unique
+  categoryId String   
   category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
-  assetTypeId String @unique
+  assetTypeId String    
   assetType   AssetType @relation(fields: [assetTypeId], references: [id], onDelete: Cascade)
 
-  tokenTypeId String @unique
+  tokenTypeId String    
   tokenType   TokenType @relation(fields: [tokenTypeId], references: [id], onDelete: Cascade)
 
-   userId String?
+  userId String?
   user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  offerStartDate    DateTime
-  offerEndDate      DateTime
-  rewardDate        DateTime? // Added missing field
+  creatorId String?
+
+  offerStartDate DateTime
+  offerEndDate   DateTime
+  rewardDate     DateTime? // Added missing field
 
   rewardDescription String? // Added missing field
   riskScale         RiskScale

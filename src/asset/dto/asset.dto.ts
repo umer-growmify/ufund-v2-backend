@@ -100,6 +100,13 @@ export class CreateAssetDto {
   tokenTypeId: string;
 
   @ApiProperty({
+    example: 'creator ID',
+    description: 'Id of the creator who can create this',
+  })
+  @IsUUID()
+  creatorId: string;
+
+  @ApiProperty({
     example: '2025-08-01',
     description: 'Offer start date in YYYY-MM-DD format',
   })
@@ -159,4 +166,24 @@ export class CreateAssetDto {
   })
   @IsUrl()
   assetImageUrl: string;
+}
+
+export class CreateAssetTypeDto {
+  @ApiProperty({
+    example: 'Write type of the asset',
+    description: 'Name of the asset Type',
+  })
+  @IsString()
+  @IsNotEmpty()
+  name: string;
+}
+
+export class CreateTokenTypeDto {
+  @ApiProperty({
+    example: 'Write type of the token',
+    description: 'Name of the Token Type',
+  })
+  @IsString()
+  @IsNotEmpty()
+  name: string;
 }

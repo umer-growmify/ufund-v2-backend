@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { LoginDto, RegisterDto } from './dto/auth.dto';
 import { AuthService } from './auth.service';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { RoleType as Role } from '@prisma/client';
 import {
@@ -20,6 +20,7 @@ import {
   ApiResponse,
   ApiParam,
   ApiQuery,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 
 @ApiTags('Auth') // Grouped under "Auth" tag
@@ -34,6 +35,28 @@ export class AuthController {
     return this.authService.registerUser(dto);
   }
 
+  @Get('check')
+  @UseGuards(AuthGuard('jwt')) // Requires valid JWT
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Check authentication status' })
+  @ApiResponse({ status: 200, description: 'Returns current user data' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async checkAuth(@Req() req: Request) {
+    console.log('Checking auth for user:', req.user);
+
+    return this.authService.checkAuth(req.user);
+  }
+
+  @Post('logout')
+  @UseGuards(AuthGuard('jwt')) // Requires valid JWT
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Logout user' })
+  @ApiResponse({ status: 200, description: 'User logged out successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  logout(@Res({ passthrough: true }) res: Response) {
+    return this.authService.logOutUser(res);
+  }
+
   @Get('verify/:token')
   @ApiOperation({ summary: 'Verify user email using token' })
   @ApiParam({ name: 'token', description: 'Verification token from email' })
@@ -45,7 +68,10 @@ export class AuthController {
   @Post('login')
   @ApiOperation({ summary: 'User login with email and password' })
   @ApiResponse({ status: 201, description: 'Login successful with JWT token' })
-  @ApiResponse({ status: 401, description: 'Unauthorized - Invalid credentials' })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid credentials',
+  })
   login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
     return this.authService.loginUser(dto, res);
   }
@@ -66,7 +92,7 @@ export class AuthController {
   @UseGuards(AuthGuard('google'))
   async googleAuthCallback(@Req() req, @Res() res: Response) {
     const user = req.user;
-    const activeRole = req.query.state as Role || 'investor';
+    const activeRole = (req.query.state as Role) || 'investor';
     await this.authService.socialLogin({ ...user, activeRole }, res);
     this.redirectToFrontend(res);
   }
@@ -87,7 +113,7 @@ export class AuthController {
   @UseGuards(AuthGuard('facebook'))
   async facebookAuthCallback(@Req() req, @Res() res: Response) {
     const user = req.user;
-    const activeRole = req.query.state as Role || 'investor';
+    const activeRole = (req.query.state as Role) || 'investor';
     await this.authService.socialLogin({ ...user, activeRole }, res);
     this.redirectToFrontend(res);
   }
@@ -108,7 +134,7 @@ export class AuthController {
   @UseGuards(AuthGuard('linkedin'))
   async linkedinAuthCallback(@Req() req, @Res() res: Response) {
     const user = req.user;
-    const activeRole = req.query.state as Role || 'investor';
+    const activeRole = (req.query.state as Role) || 'investor';
     await this.authService.socialLogin({ ...user, activeRole }, res);
     this.redirectToFrontend(res);
   }
@@ -129,7 +155,7 @@ export class AuthController {
   @UseGuards(AuthGuard('twitter'))
   async twitterAuthCallback(@Req() req, @Res() res: Response) {
     const user = req.user;
-    const activeRole = req.query.state as Role || 'investor';
+    const activeRole = (req.query.state as Role) || 'investor';
     await this.authService.socialLogin({ ...user, activeRole }, res);
     this.redirectToFrontend(res);
   }

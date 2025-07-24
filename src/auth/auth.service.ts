@@ -97,6 +97,45 @@ export class AuthService {
     };
   }
 
+  async logOutUser(res: Response) {
+    res.clearCookie('token');
+    return { success: true, message: 'Logged out successfully' };
+  }
+  
+
+async checkAuth(user: any) {
+    if (!user) {
+      throw new UnauthorizedException('User not authenticated');
+    }
+
+    const userData = await this.prisma.user.findUnique({
+      where: { id: user.id },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        phoneNumber: true,
+        countryCode: true,
+        roles: true,
+        isVerified: true,
+        agreedToTerms: true
+      }
+    });
+
+    if (!userData) {
+      throw new NotFoundException('User not found');
+    }
+
+    return {
+      success: true,
+      user: {
+        ...userData,
+        // Ensure activeRole exists, fallback to first role if not set
+        activeRole: user.activeRole
+      }
+    };
+}
   async verifyUserEmail(token: string) {
     const user = await this.prisma.user.findFirst({
       where: { verificationToken: token },

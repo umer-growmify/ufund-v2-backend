@@ -5,14 +5,17 @@ import {
 } from '@nestjs/common';
 import { CreateProfileDto } from './dto/profile.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { AwsService } from 'src/aws/aws.service';
 
 @Injectable()
 export class ProfileService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly awsService: AwsService,
+  ) {}
 
-  async createProfile(dto: CreateProfileDto, userId: string) {
-
-    //  Check if profile already exists
+  async createProfile(dto: CreateProfileDto, userId: string, file?: Express.Multer.File) {
+    // Check if profile already exists
     const existingProfile = await this.prisma.profile.findUnique({
       where: { userId },
     });
@@ -21,13 +24,20 @@ export class ProfileService {
       throw new BadRequestException('Profile already exists for this user');
     }
 
-    // Create profile
+    // Handle image upload to S3
+    let imageUrl: string | null = null;
+    if (file) {
+      imageUrl = await this.awsService.uploadFile(file, userId, 'profiles');
+    }
+
+    // Create profile with S3 URL if uploaded
     const newUser = await this.prisma.profile.create({
       data: {
         userId,
         userAccountType: dto.userAccountType,
+        image: imageUrl,
         incomeFrequency: dto.incomeFrequency,
-        totalAnnualRevenue: dto.totalAnnualRevenue,
+        totalAnnualRevenue: Number(dto.totalAnnualRevenue) || 0, // Ensure it's a number
         addressLine1: dto.addressLine1,
         addressLine2: dto.addressLine2,
         zipCode: dto.zipCode,
@@ -57,7 +67,6 @@ export class ProfileService {
   }
 
   async getProfile(userId: string) {
-
     const user = await this.prisma.profile.findUnique({
       where: { userId },
       include: {

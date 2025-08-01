@@ -9,13 +9,6 @@ export type JwtPayload = {
   type: 'user' | 'admin';
 };
 
-// export interface RequestWithUser extends Request {
-//   user: {
-//     id: string;
-//     roles: Role[];
-//     activeRole: Role;
-//   };
-// }
 
 export interface RequestWithUser extends Request {
   user: {
@@ -23,4 +16,11 @@ export interface RequestWithUser extends Request {
     activeRole: RoleType | AdminRoleType; // Changed from roles array
     type: 'user' | 'admin';
   };
+}
+
+export interface FileTypeConfig {
+  allowedMimeTypes: string[];
+  maxSize: number;
+  fieldName: string;
+  required?: boolean;
 }

@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Req,
+  UseGuards,
+  UseInterceptors,
+  UploadedFiles,
+} from '@nestjs/common';
 import { AdminRoleType, RoleType } from '@prisma/client';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { Roles, RolesGuard } from 'src/auth/guards/roles.guard';
@@ -10,7 +19,13 @@ import {
   ApiOperation,
   ApiResponse,
   ApiTags,
+  ApiConsumes,
 } from '@nestjs/swagger';
+import {
+  FileFieldsInterceptor,
+} from '@nestjs/platform-express';
+import { productFileConfig } from 'src/config/file-config';
+import { FileValidationInterceptor } from 'src/utils/file-validation.interceptor';
 
 @ApiTags('Products')
 @ApiBearerAuth()
@@ -22,10 +37,31 @@ export class ProductsController {
   @ApiOperation({ summary: 'Create a product (Campaigner or SUPER_ADMIN)' })
   @ApiResponse({ status: 201, description: 'Product created successfully' })
   @ApiResponse({ status: 403, description: 'Forbidden - Only campaigner or SUPER_ADMIN can create product' })
+  @ApiConsumes('multipart/form-data')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(AdminRoleType.SUPER_ADMIN, RoleType.campaigner)
-  createProduct(
+  @UseInterceptors(
+    new FileValidationInterceptor(productFileConfig),
+    FileFieldsInterceptor([
+      { name: 'auditorsReport', maxCount: 1 },
+      { name: 'document', maxCount: 1 },
+      { name: 'tokenImage', maxCount: 1 },
+      { name: 'assetImage', maxCount: 1 },
+      { name: 'imageOne', maxCount: 1 },
+      { name: 'imageTwo', maxCount: 1 },
+    ]),
+  )
+  async createProduct(
     @Body() createProductDto: CreateProductDto,
+    @UploadedFiles()
+    files: {
+      auditorsReport: Express.Multer.File[];
+      document?: Express.Multer.File[];
+      tokenImage: Express.Multer.File[];
+      assetImage: Express.Multer.File[];
+      imageOne?: Express.Multer.File[];
+      imageTwo?: Express.Multer.File[];
+    },
     @Req() req: RequestWithUser,
   ) {
     const activeRole = req.user.activeRole;
@@ -33,6 +69,7 @@ export class ProductsController {
     const id = req.user.id;
     return this.productsService.createProduct(
       createProductDto,
+      files,
       id,
       activeRole,
       userType,
@@ -47,6 +84,4 @@ export class ProductsController {
   getAllProducts() {
     return this.productsService.getAllProducts();
   }
-
-  // Optionally you can uncomment and document other endpoints like Get/:id, Patch, Delete when implemented.
 }

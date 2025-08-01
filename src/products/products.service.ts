@@ -4,17 +4,55 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateProductDto, UpdateProductDto } from './dto/product.dto';
+import { AwsService } from 'src/aws/aws.service';
+import { CreateProductDto } from './dto/product.dto';
 
 @Injectable()
 export class ProductsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly awsService: AwsService,
+  ) {}
+
   async createProduct(
     createProductDto: CreateProductDto,
+    files: {
+      auditorsReport: Express.Multer.File[];
+      document?: Express.Multer.File[];
+      tokenImage: Express.Multer.File[];
+      assetImage: Express.Multer.File[];
+      imageOne?: Express.Multer.File[];
+      imageTwo?: Express.Multer.File[];
+    },
     id: string,
     activeRole: string,
     userType: string,
   ) {
+    // Upload files to S3
+    const auditorsReportUrl = await this.awsService.uploadFile(
+      files.auditorsReport[0],
+      id,
+      'products',
+    );
+    const documentUrl = files.document?.[0]
+      ? await this.awsService.uploadFile(files.document[0], id, 'products')
+      : undefined;
+    const tokenImageUrl = await this.awsService.uploadFile(
+      files.tokenImage[0],
+      id,
+      'products',
+    );
+    const assetImageUrl = await this.awsService.uploadFile(
+      files.assetImage[0],
+      id,
+      'products',
+    );
+    const imageUrlOne = files.imageOne?.[0]
+      ? await this.awsService.uploadFile(files.imageOne[0], id, 'products')
+      : undefined;
+    const imageUrlTwo = files.imageTwo?.[0]
+      ? await this.awsService.uploadFile(files.imageTwo[0], id, 'products')
+      : undefined;
 
     if (userType === 'admin') {
       try {
@@ -36,6 +74,12 @@ export class ProductsService {
           data: {
             ...createProductDto,
             creatorId: id,
+            auditorsReportUrl,
+            documentUrl,
+            tokenImageUrl,
+            assetImageUrl,
+            imageUrlOne,
+            imageUrlTwo,
           },
         });
 
@@ -49,16 +93,20 @@ export class ProductsService {
         throw new BadRequestException(error.message || 'Product Not created');
       }
     } else if (activeRole === 'campaigner') {
-      console.log('Creating product by campaigner...');
       try {
         const createProduct = await this.prisma.products.create({
           data: {
             ...createProductDto,
             campaignerId: id,
             creatorId: id,
+            auditorsReportUrl,
+            documentUrl,
+            tokenImageUrl,
+            assetImageUrl,
+            imageUrlOne,
+            imageUrlTwo,
           },
         });
-        console.log(createProduct);
         return {
           success: true,
           message: 'Product Created Successfully',
@@ -92,9 +140,9 @@ export class ProductsService {
     return `This action returns a #${id} product`;
   }
 
-  update(id: number, updateProductDto: UpdateProductDto) {
-    return `This action updates a #${id} product`;
-  }
+  // update(id: number, updateProductDto: UpdateProductDto) {
+  //   return `This action updates a #${id} product`;
+  // }
 
   remove(id: number) {
     return `This action removes a #${id} product`;

@@ -38,6 +38,7 @@ model Profile {
   id     String @id @default(uuid())
   userId String @unique
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  image  String?
   // picture         String?
 
   // Financial Information
@@ -146,9 +147,12 @@ model Products {
   maturityCountDays   Int
   maturityDate        DateTime
 
-  auditorsReportUrl String // PDF file URL
-  tokenImageUrl     String // Token image URL
-  assetImageUrl     String // Asset image URL
+  auditorsReportUrl String? // PDF file URL
+  documentUrl     String? // Document URL
+  tokenImageUrl     String? // Token image URL
+  assetImageUrl     String? // Asset image URL
+  imageUrlOne         String? // Product image URL
+  imageUrlTwo         String? // Product image URL
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

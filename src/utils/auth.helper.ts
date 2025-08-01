@@ -1,11 +1,11 @@
 // src/auth/utils/auth.helper.ts
-import { NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { PrismaClient, RoleType, User } from '@prisma/client';
+import { UnauthorizedException } from '@nestjs/common';
+import { RoleType, User } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
-import * as nodemailer from 'nodemailer';
-import * as Mailgen from 'mailgen';
-import * as jwt from 'jsonwebtoken';
 import { Response } from 'express';
+import * as jwt from 'jsonwebtoken';
+import * as Mailgen from 'mailgen';
+import * as nodemailer from 'nodemailer';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 

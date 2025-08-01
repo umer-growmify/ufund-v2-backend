@@ -6,7 +6,13 @@ import {
   Post,
   Req,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipe,
+  FileTypeValidator,
+  MaxFileSizeValidator,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { RoleType as Role } from '@prisma/client';
 import { RequestWithUser } from 'src/types/types';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -18,7 +24,11 @@ import {
   ApiOperation,
   ApiResponse,
   ApiTags,
+  ApiConsumes,
+  ApiBody,
 } from '@nestjs/swagger';
+import { FileValidationInterceptor } from 'src/utils/file-validation.interceptor';
+import { prfileFileConfig } from 'src/config/file-config';
 
 @ApiTags('Profile')
 @ApiBearerAuth()
@@ -29,12 +39,43 @@ export class ProfileController {
   @Post('create')
   @ApiOperation({ summary: 'Create profile (Investor, Campaigner)' })
   @ApiResponse({ status: 201, description: 'Profile created successfully' })
-  @ApiResponse({ status: 404, description: 'User not found or profile not created' })
+  @ApiResponse({
+    status: 404,
+    description: 'User not found or profile not created',
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'Profile data and optional image file',
+    type: CreateProfileDto,
+    schema: {
+      type: 'object',
+      properties: {
+        image: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.investor, Role.campaigner)
+  @UseInterceptors(
+    FileInterceptor('image'),
+    new FileValidationInterceptor(prfileFileConfig),
+  )
   async createProfile(
     @Req() req: RequestWithUser,
     @Body() createProfileDto: CreateProfileDto,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new FileTypeValidator({ fileType: /(jpg|jpeg|png)$/ }),
+          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }),
+        ],
+        fileIsRequired: false,
+      }),
+    )
+    file?: Express.Multer.File,
   ) {
     const userId = req.user.id;
     console.log(`Creating profile for user ID: ${userId}`);
@@ -43,9 +84,10 @@ export class ProfileController {
       throw new NotFoundException('User not found');
     }
 
-    const createProfile = this.profileService.createProfile(
+    const createProfile = await this.profileService.createProfile(
       createProfileDto,
       userId,
+      file,
     );
 
     if (!createProfile) {

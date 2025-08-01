@@ -13,7 +13,7 @@ export class AssetController {
 
   @Post('asset-type')
   @ApiOperation({ summary: 'Create a asset Type (SUPER_ADMIN)' })
-  @ApiResponse({ status: 201, description: 'Asset type created successfully' })
+  @ApiResponse({ status: 201, description: 'Asset type created successfully' }) 
   @ApiResponse({
     status: 403,
     description: 'Forbidden - Only  SUPER_ADMIN can create Asset Type',

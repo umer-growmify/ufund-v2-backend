@@ -6,6 +6,7 @@ import {
   IsEmail,
   IsUUID,
   IsNumber,
+  IsUrl,
 } from 'class-validator';
 import {
   UserAccountType,
@@ -23,7 +24,15 @@ export class CreateProfileDto {
   @IsEnum(UserAccountType)
   @IsNotEmpty()
   userAccountType: UserAccountType;
-
+  @ApiPropertyOptional({
+    example: 'https://s3.amazonaws.com/bucket/profile-image.jpg',
+    description: 'URL of the user profile image stored in S3',
+  })
+  @IsString()
+  @IsOptional()
+  @IsUrl()
+  image?: string;
+  
   @ApiProperty({
     example: 'MONTHLY',
     enum: IncomeFrequencyType,

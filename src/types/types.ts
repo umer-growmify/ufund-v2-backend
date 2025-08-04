@@ -2,12 +2,14 @@ import { AdminRoleType, RoleType } from "@prisma/client";
 import { Request } from "express";
 
 
-export type JwtPayload = {
-  id: string;
-  email?: string;
-  activeRole: RoleType | AdminRoleType; // Single role
+export interface JwtPayload {
+  sub: string;
+  email: string;
+  role: string;
   type: 'user' | 'admin';
-};
+  iat?: number;
+  exp?: number;
+}
 
 
 export interface RequestWithUser extends Request {

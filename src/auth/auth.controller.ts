@@ -1,167 +1,205 @@
 import {
-  Body,
   Controller,
-  Param,
   Post,
   Get,
+  Body,
   Res,
   Req,
   UseGuards,
   Query,
+  BadRequestException,
 } from '@nestjs/common';
-import { LoginDto, RegisterDto } from './dto/auth.dto';
 import { AuthService } from './auth.service';
+import {
+  LoginDto,
+  RegisterDto,
+  SocialUserDto,
+  AdminLoginDto,
+} from './dto/auth.dto';
 import { Request, Response } from 'express';
-import { AuthGuard } from '@nestjs/passport';
-import { RoleType as Role } from '@prisma/client';
+import { RoleType } from '@prisma/client';
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
-  ApiParam,
   ApiQuery,
   ApiBearerAuth,
 } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
+import { ConfigService } from '@nestjs/config';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { AuthGuard } from '@nestjs/passport';
+import { RolesGuard } from './guards/roles.guard';
 
-@ApiTags('Auth') // Grouped under "Auth" tag
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @Post('register')
+  @Throttle({ default: { limit: 5, ttl: 60 } })
   @ApiOperation({ summary: 'Register a new user' })
   @ApiResponse({ status: 201, description: 'User registered successfully' })
-  register(@Body() dto: RegisterDto) {
+  async register(@Body() dto: RegisterDto) {
     return this.authService.registerUser(dto);
   }
 
-  @Get('check')
-  @UseGuards(AuthGuard('jwt')) // Requires valid JWT
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Check authentication status' })
-  @ApiResponse({ status: 200, description: 'Returns current user data' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async checkAuth(@Req() req: Request) {
-    console.log('Checking auth for user:', req.user);
-
-    return this.authService.checkAuth(req.user);
-  }
-
-  @Post('logout')
-  @UseGuards(AuthGuard('jwt')) // Requires valid JWT
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Logout user' })
-  @ApiResponse({ status: 200, description: 'User logged out successfully' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  logout(@Res({ passthrough: true }) res: Response) {
-    return this.authService.logOutUser(res);
-  }
-
-  @Get('verify/:token')
-  @ApiOperation({ summary: 'Verify user email using token' })
-  @ApiParam({ name: 'token', description: 'Verification token from email' })
-  @ApiResponse({ status: 200, description: 'Email verified successfully' })
-  verifyEmail(@Param('token') token: string) {
-    return this.authService.verifyUserEmail(token);
-  }
-
   @Post('login')
+  @Throttle({ default: { limit: 5, ttl: 60 } })
   @ApiOperation({ summary: 'User login with email and password' })
   @ApiResponse({ status: 201, description: 'Login successful with JWT token' })
   @ApiResponse({
     status: 401,
     description: 'Unauthorized - Invalid credentials',
   })
-  login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
+  async login(
+    @Body() dto: LoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     return this.authService.loginUser(dto, res);
+  }
+
+  @Post('admin/login')
+  @Throttle({ default: { limit: 5, ttl: 60 } })
+  @ApiOperation({ summary: 'Admin login with email and password' })
+  @ApiResponse({ status: 201, description: 'Admin login successful' })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid credentials',
+  })
+  async adminLogin(
+    @Body() dto: AdminLoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return this.authService.adminLogin(dto, res);
+  }
+
+  @Post('logout')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Logout user or admin' })
+  @ApiResponse({ status: 200, description: 'Logged out successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    const user = req.user as any;
+    return this.authService.logOutUser(res, user.id, user.type === 'admin');
+  }
+
+  @Get('check')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Check authentication status' })
+  @ApiResponse({ status: 200, description: 'Returns current user data' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  
+  async checkAuth(@Req() req: Request) {
+    // console.log(req);
+    
+    console.log('Checking auth for user:');
+    return this.authService.checkAuth(req.user);
+  }
+
+  @Get('verify')
+  @ApiOperation({ summary: 'Verify user email using token' })
+  @ApiQuery({ name: 'token', description: 'Verification token from email' })
+  @ApiResponse({ status: 200, description: 'Email verified successfully' })
+  async verifyEmail(@Query('token') token: string) {
+    return this.authService.verifyUserEmail(token);
+  }
+
+  @Post('refresh')
+  @Throttle({ default: { limit: 5, ttl: 60 } })
+  @ApiOperation({ summary: 'Refresh access token using refresh token' })
+  @ApiResponse({ status: 200, description: 'Token refreshed successfully' })
+  @ApiResponse({ status: 401, description: 'Invalid or expired refresh token' })
+  async refresh(
+    @Body('refreshToken') refreshToken: string,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return this.authService.refreshToken(refreshToken, res);
   }
 
   @Get('google')
   @ApiOperation({ summary: 'Google OAuth login (redirects to Google)' })
-  @ApiQuery({
-    name: 'role',
-    enum: Role,
-    required: true,
-    description: 'Role type (investor, campaigner)',
-  })
+  @ApiQuery({ name: 'role', enum: RoleType, required: true })
   @UseGuards(AuthGuard('google'))
-  googleAuth(@Query('role') role: Role) {}
+  async googleAuth(@Query('role') role: RoleType) {}
 
   @Get('google/callback')
-  @ApiOperation({ summary: 'Google OAuth callback (handled automatically)' })
+  @ApiOperation({ summary: 'Google OAuth callback' })
   @UseGuards(AuthGuard('google'))
-  async googleAuthCallback(@Req() req, @Res() res: Response) {
-    const user = req.user;
-    const activeRole = (req.query.state as Role) || 'investor';
+  async googleAuthCallback(@Req() req: Request, @Res() res: Response) {
+    const user = req.user as any;
+    const activeRole = req.query.role as RoleType;
+    if (!Object.values(RoleType).includes(activeRole)) {
+      throw new BadRequestException('Invalid role provided');
+    }
     await this.authService.socialLogin({ ...user, activeRole }, res);
     this.redirectToFrontend(res);
   }
 
   @Get('facebook')
   @ApiOperation({ summary: 'Facebook OAuth login (redirects to Facebook)' })
-  @ApiQuery({
-    name: 'role',
-    enum: Role,
-    required: true,
-    description: 'Role type (investor, campaigner)',
-  })
+  @ApiQuery({ name: 'role', enum: RoleType, required: true })
   @UseGuards(AuthGuard('facebook'))
-  facebookAuth(@Query('role') role: Role) {}
+  async facebookAuth(@Query('role') role: RoleType) {}
 
   @Get('facebook/callback')
-  @ApiOperation({ summary: 'Facebook OAuth callback (handled automatically)' })
+  @ApiOperation({ summary: 'Facebook OAuth callback' })
   @UseGuards(AuthGuard('facebook'))
-  async facebookAuthCallback(@Req() req, @Res() res: Response) {
-    const user = req.user;
-    const activeRole = (req.query.state as Role) || 'investor';
+  async facebookAuthCallback(@Req() req: Request, @Res() res: Response) {
+    const user = req.user as any;
+    const activeRole = req.query.role as RoleType;
+    if (!Object.values(RoleType).includes(activeRole)) {
+      throw new BadRequestException('Invalid role provided');
+    }
     await this.authService.socialLogin({ ...user, activeRole }, res);
     this.redirectToFrontend(res);
   }
 
   @Get('linkedin')
   @ApiOperation({ summary: 'LinkedIn OAuth login (redirects to LinkedIn)' })
-  @ApiQuery({
-    name: 'role',
-    enum: Role,
-    required: true,
-    description: 'Role type (investor, campaigner)',
-  })
+  @ApiQuery({ name: 'role', enum: RoleType, required: true })
   @UseGuards(AuthGuard('linkedin'))
-  linkedinAuth(@Query('role') role: Role) {}
+  async linkedinAuth(@Query('role') role: RoleType) {}
 
   @Get('linkedin/callback')
-  @ApiOperation({ summary: 'LinkedIn OAuth callback (handled automatically)' })
+  @ApiOperation({ summary: 'LinkedIn OAuth callback' })
   @UseGuards(AuthGuard('linkedin'))
-  async linkedinAuthCallback(@Req() req, @Res() res: Response) {
-    const user = req.user;
-    const activeRole = (req.query.state as Role) || 'investor';
+  async linkedinAuthCallback(@Req() req: Request, @Res() res: Response) {
+    const user = req.user as any;
+    const activeRole = req.query.role as RoleType;
+    if (!Object.values(RoleType).includes(activeRole)) {
+      throw new BadRequestException('Invalid role provided');
+    }
     await this.authService.socialLogin({ ...user, activeRole }, res);
     this.redirectToFrontend(res);
   }
 
   @Get('twitter')
   @ApiOperation({ summary: 'Twitter OAuth login (redirects to Twitter)' })
-  @ApiQuery({
-    name: 'role',
-    enum: Role,
-    required: true,
-    description: 'Role type (investor, campaigner)',
-  })
+  @ApiQuery({ name: 'role', enum: RoleType, required: true })
   @UseGuards(AuthGuard('twitter'))
-  twitterAuth(@Query('role') role: Role) {}
+  async twitterAuth(@Query('role') role: RoleType) {}
 
   @Get('twitter/callback')
-  @ApiOperation({ summary: 'Twitter OAuth callback (handled automatically)' })
+  @ApiOperation({ summary: 'Twitter OAuth callback' })
   @UseGuards(AuthGuard('twitter'))
-  async twitterAuthCallback(@Req() req, @Res() res: Response) {
-    const user = req.user;
-    const activeRole = (req.query.state as Role) || 'investor';
+  async twitterAuthCallback(@Req() req: Request, @Res() res: Response) {
+    const user = req.user as any;
+    const activeRole = req.query.role as RoleType;
+    if (!Object.values(RoleType).includes(activeRole)) {
+      throw new BadRequestException('Invalid role provided');
+    }
     await this.authService.socialLogin({ ...user, activeRole }, res);
     this.redirectToFrontend(res);
   }
 
   private redirectToFrontend(res: Response) {
-    const redirectUrl = process.env.FRONTEND_REDIRECT_URL;
+    const redirectUrl = this.configService.get('FRONTEND_REDIRECT_URL');
     if (!redirectUrl) {
       throw new Error('Frontend redirect URL is not configured');
     }

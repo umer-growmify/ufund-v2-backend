@@ -1,10 +1,6 @@
 import { IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsOptional, IsPhoneNumber, IsString, MinLength, IsArray } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-
-enum Role {
-  investor = 'investor',
-  campaigner = 'campaigner',
-}
+import { RoleType } from '@prisma/client';
 
 export class RegisterDto {
   @ApiProperty({ example: 'john@example.com' })
@@ -35,13 +31,13 @@ export class RegisterDto {
   @ApiProperty({ example: 'password123' })
   @IsNotEmpty()
   @IsString()
-  @MinLength(6)
+  @MinLength(8)
   password: string;
 
   @ApiProperty({ example: 'password123' })
   @IsNotEmpty()
   @IsString()
-  @MinLength(6)
+  @MinLength(8)
   repeatPassword: string;
 
   @ApiProperty({ example: true })
@@ -49,11 +45,11 @@ export class RegisterDto {
   @IsBoolean()
   agreedToTerms: boolean;
 
-  @ApiProperty({ example: ['investor'], isArray: true, enum: Role })
+  @ApiProperty({ example: ['investor'], isArray: true, enum: RoleType })
   @IsNotEmpty()
   @IsArray()
-  @IsEnum(Role, { each: true })
-  roles: Role[];
+  @IsEnum(RoleType, { each: true })
+  roles: RoleType[];
 }
 
 export class LoginDto {
@@ -72,10 +68,22 @@ export class LoginDto {
   @IsOptional()
   rememberMe?: boolean;
 
-  @ApiProperty({ example: 'investor', enum: Role })
+  @ApiProperty({ example: 'investor', enum: RoleType })
   @IsNotEmpty()
-  @IsEnum(Role)
-  activeRole: Role;
+  @IsEnum(RoleType)
+  activeRole: RoleType;
+}
+
+export class AdminLoginDto {
+  @ApiProperty({ example: 'admin@example.com' })
+  @IsNotEmpty()
+  @IsEmail()
+  email: string;
+
+  @ApiProperty({ example: 'adminpassword' })
+  @IsNotEmpty()
+  @IsString()
+  password: string;
 }
 
 export class SocialUserDto {
@@ -102,8 +110,8 @@ export class SocialUserDto {
   @IsString()
   lastName?: string;
 
-  @ApiProperty({ example: 'investor', enum: Role })
+  @ApiProperty({ example: 'investor', enum: RoleType })
   @IsNotEmpty()
-  @IsEnum(Role)
-  activeRole: Role;
+  @IsEnum(RoleType)
+  activeRole: RoleType;
 }

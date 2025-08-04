@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { AdminRoleType, RoleType } from '@prisma/client';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { Roles, RolesGuard } from 'src/auth/guards/roles.guard';
+import {  RolesGuard } from 'src/auth/guards/roles.guard';
 import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/category.dto';
 import {
@@ -11,6 +11,7 @@ import {
   ApiResponse,
   ApiParam,
 } from '@nestjs/swagger';
+import { Roles } from 'src/auth/guards/roles.decorator';
 
 @ApiTags('Category') // Group all under Category in Swagger
 @ApiBearerAuth() // Use Bearer token in Swagger

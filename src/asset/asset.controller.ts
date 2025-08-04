@@ -1,11 +1,12 @@
 import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { AssetService } from './asset.service';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { Roles, RolesGuard } from 'src/auth/guards/roles.guard';
+import {  RolesGuard } from 'src/auth/guards/roles.guard';
 import { AdminRoleType, RoleType } from '@prisma/client';
 import { CreateAssetDto, CreateAssetTypeDto, CreateTokenTypeDto } from './dto/asset.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RequestWithUser } from 'src/types/types';
+import { Roles } from 'src/auth/guards/roles.decorator';
 
 @Controller('asset')
 export class AssetController {

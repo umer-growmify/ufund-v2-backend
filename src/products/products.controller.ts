@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { AdminRoleType, RoleType } from '@prisma/client';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { Roles, RolesGuard } from 'src/auth/guards/roles.guard';
+import {  RolesGuard } from 'src/auth/guards/roles.guard';
 import { RequestWithUser } from 'src/types/types';
 import { CreateProductDto } from './dto/product.dto';
 import { ProductsService } from './products.service';
@@ -26,6 +26,7 @@ import {
 } from '@nestjs/platform-express';
 import { productFileConfig } from 'src/config/file-config';
 import { FileValidationInterceptor } from 'src/utils/file-validation.interceptor';
+import { Roles } from 'src/auth/guards/roles.decorator';
 
 @ApiTags('Products')
 @ApiBearerAuth()

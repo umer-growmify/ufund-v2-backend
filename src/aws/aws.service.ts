@@ -1,7 +1,7 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { ConfigService } from '@nestjs/config';
-import { ObjectCannedACL } from '@aws-sdk/client-s3';
 
 @Injectable()
 export class AwsService {
@@ -31,7 +31,7 @@ export class AwsService {
     file: Express.Multer.File,
     userId: string,
     folder: string,
-  ): Promise<string> {
+  ): Promise<{ key: string; url: string }> {
     const bucket = this.configService.get<string>('AWS_S3_BUCKET');
     if (!bucket) {
       throw new InternalServerErrorException(
@@ -45,15 +45,38 @@ export class AwsService {
       Key: key,
       Body: file.buffer,
       ContentType: file.mimetype,
-      ACL: ObjectCannedACL.public_read, // Make file publicly readable
     };
 
     try {
       await this.s3Client.send(new PutObjectCommand(params));
-      return `https://${bucket}.s3.${this.configService.get<string>('AWS_REGION')}.amazonaws.com/${key}`;
+      const signedUrl = await this.getSignedUrl(key);
+      return { key, url: signedUrl };
     } catch (error) {
       throw new InternalServerErrorException(
         `Failed to upload file to S3: ${error.message}`,
+      );
+    }
+  }
+
+  async getSignedUrl(key: string, expiresIn: number = 604800): Promise<string> {
+    const bucket = this.configService.get<string>('AWS_S3_BUCKET');
+    if (!bucket) {
+      throw new InternalServerErrorException(
+        'AWS_S3_BUCKET is not defined in environment variables.',
+      );
+    }
+
+    const command = new GetObjectCommand({
+      Bucket: bucket,
+      Key: key,
+    });
+
+    try {
+      const signedUrl = await getSignedUrl(this.s3Client, command, { expiresIn });
+      return signedUrl;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Failed to generate signed URL: ${error.message}`,
       );
     }
   }

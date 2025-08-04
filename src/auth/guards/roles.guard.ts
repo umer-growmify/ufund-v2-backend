@@ -1,60 +1,55 @@
-// src/auth/guards/roles.guard.ts
 import {
   CanActivate,
   ExecutionContext,
   ForbiddenException,
   Injectable,
-  SetMetadata,
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { RoleType, AdminRoleType } from '@prisma/client';
 import { Request } from 'express';
-
-type AnyRole = RoleType | AdminRoleType;
-
-export const ROLES_KEY = 'roles';
-export const Roles = (...roles: AnyRole[]) => SetMetadata(ROLES_KEY, roles);
+import { ROLES_KEY } from './roles.decorator';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.getAllAndOverride<AnyRole[]>(ROLES_KEY, [
+    console.log('RolesGuard - Initialized');
+
+    const requiredRoles = this.reflector.getAllAndOverride<(RoleType | AdminRoleType)[]>(ROLES_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
 
-    // No roles required = public endpoint
+    console.log('RolesGuard - Required Roles:', requiredRoles);
+
     if (!requiredRoles || requiredRoles.length === 0) {
+      console.log('RolesGuard - No roles required, allowing access');
       return true;
     }
-
-    console.log(`Required roles: ${requiredRoles.join(', ')}`);
-    
 
     const request = context.switchToHttp().getRequest<Request>();
     const user = request.user as any;
 
-    // No user = not authenticated
+    console.log('RolesGuard - User:', user);
+
     if (!user) {
+      console.log('RolesGuard - No user found in request');
       throw new UnauthorizedException('Not authenticated');
     }
 
-    // SUPER_ADMIN has full access
-    if (user.activeRole === 'SUPER_ADMIN') {
+    if (user.activeRole === AdminRoleType.SUPER_ADMIN) {
+      console.log('RolesGuard - Super admin, granting access');
       return true;
     }
 
-    // Check if user has required role
     if (!requiredRoles.includes(user.activeRole)) {
-      console.log(`User role: ${user.activeRole}`);
-      throw new ForbiddenException(
-        `Required role: ${requiredRoles.join(' or ')}`
-      );
+      console.log(`RolesGuard - User role ${user.activeRole} does not match required roles: ${requiredRoles.join(' or ')}`);
+      throw new ForbiddenException(`Required role: ${requiredRoles.join(' or ')}`);
     }
 
+    console.log('RolesGuard - Role check passed');
     return true;
   }
 }

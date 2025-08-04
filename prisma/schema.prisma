@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,64 +8,55 @@ datasource db {
 }
 
 model User {
-  id                String     @id @default(uuid())
-  email             String     @unique
+  id                String        @id @default(uuid())
+  email             String        @unique
   firstName         String
   lastName          String
   phoneNumber       String?
   countryCode       String?
   password          String?
-  roles             RoleType[] // Changed from single 'role' to array 'roles'
+  roles             RoleType[]
   agreedToTerms     Boolean
-  isVerified        Boolean    @default(false)
+  isVerified        Boolean       @default(false)
   verificationToken String?
   provider          String?
   providerId        String?
-  createdAt         DateTime   @default(now())
-  updatedAt         DateTime   @updatedAt
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
   profile           Profile?
   Products          Products[]
   Asset             Asset[]
+  refreshTokens     RefreshToken[]
 }
 
 model Profile {
-  id     String @id @default(uuid())
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  image  String?
-  // picture         String?
-
-  // Financial Information
-  userAccountType    UserAccountType     @default(INDIVIDUAL)
-  incomeFrequency    IncomeFrequencyType @default(MONTHLY)
-  totalAnnualRevenue Float               @default(0.0)
-
-  // Personal Address
-  addressLine1 String
-  addressLine2 String?
-  zipCode      String
-  city         String
-  state        String
-  country      String
-
-  // Company Information (if applicable)
-  companyName      String
-  companyEmail     String
-  companyTelephone String
-  companyAddress   String
-
-  // Banking Information
-  bankName        String
-  accountNumber   String
-  accountName     String
-  routingNumber   String
-  ibanNumber      String
-  swiftNumber     String
-  bankAccountType BankAccountType @default(PERSONAL)
-  bankAddress     String
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                String           @id @default(uuid())
+  userId            String           @unique
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  imageKey          String?
+  userAccountType   UserAccountType  @default(INDIVIDUAL)
+  incomeFrequency   IncomeFrequencyType @default(MONTHLY)
+  totalAnnualRevenue Float           @default(0.0)
+  addressLine1      String
+  addressLine2      String?
+  zipCode           String
+  city              String
+  state             String
+  country           String
+  companyName       String
+  companyEmail      String
+  companyTelephone  String
+  companyAddress    String
+  bankName          String
+  accountNumber     String
+  accountName       String
+  routingNumber     String
+  ibanNumber        String
+  swiftNumber       String
+  bankAccountType   BankAccountType  @default(PERSONAL)
+  bankAddress       String
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
 }
 
 model Admin {
@@ -80,15 +65,15 @@ model Admin {
   email     String        @unique
   password  String
   role      AdminRoleType
-  // picture         String?
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
+  refreshTokens RefreshToken[]
 }
 
 model Category {
   id           String       @id @default(uuid())
   name         String       @unique
-  imageUrl     String       @default("https://example.com/default-category-image.png") //this will remove after amazon s3 integration
+  imageUrl     String       @default("https://example.com/default-category-image.png")
   categoryType CategoryType
   product      Products[]
   assets       Asset[]
@@ -113,94 +98,82 @@ model TokenType {
 }
 
 model Products {
-  id               String @id @default(uuid())
+  id               String   @id @default(uuid())
   productName      String
   brand            String
   numberOfProducts Int
   hsCode           String
   eanCode          String
   upcCode          String
-
-  // Relation with Category (One-to-One)
-  categoryId String
-  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-
-  totalValue        Float
-  investmentProfit  Float // in percentage
-  adminCommission   Float // in percentage
-  unitPrice         Float
+  categoryId       String
+  category         Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  totalValue       Float
+  investmentProfit Float
+  adminCommission  Float
+  unitPrice        Float
   productTotalValue Float
-
-  // Relation with User (campaigner)
-  campaignerId String?
-  campaigner   User?   @relation(fields: [campaignerId], references: [id], onDelete: Cascade)
-
-  creatorId String?
-
-  description String
-
-  riskScale RiskScale
-
-  offerStartDate      DateTime
-  offerEndDate        DateTime
+  campaignerId     String?
+  campaigner       User?    @relation(fields: [campaignerId], references: [id], onDelete: Cascade)
+  creatorId        String?
+  description      String
+  riskScale        RiskScale
+  offerStartDate   DateTime
+  offerEndDate     DateTime
   investmentStartDate DateTime
-  maturityCountDays   Int
-  maturityDate        DateTime
-
-  auditorsReportUrl String? // PDF file URL
-  documentUrl     String? // Document URL
-  tokenImageUrl     String? // Token image URL
-  assetImageUrl     String? // Asset image URL
-  imageUrlOne         String? // Product image URL
-  imageUrlTwo         String? // Product image URL
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  maturityCountDays Int
+  maturityDate      DateTime
+  auditorsReportKey String?
+  documentKey      String?
+  tokenImageKey    String?
+  assetImageKey    String?
+  imageOneKey      String?
+  imageTwoKey      String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
 
 model Asset {
-  id              String @id @default(uuid())
+  id              String    @id @default(uuid())
   assetName       String
   tokenName       String
   tokenValue      String
   tokenSymbol     String
   tokenSupply     String
-  decimal         Int // Changed from Float to Int
+  decimal         Int
   auditorsName    String
-  adminCommission Float // Fixed spelling 
+  adminCommission Float
   assetValue      Float
-
-  // Relations (FKs)
-  categoryId String   
-  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-
-  assetTypeId String    
-  assetType   AssetType @relation(fields: [assetTypeId], references: [id], onDelete: Cascade)
-
-  tokenTypeId String    
-  tokenType   TokenType @relation(fields: [tokenTypeId], references: [id], onDelete: Cascade)
-
-  userId String?
-  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  creatorId String?
-
-  offerStartDate DateTime
-  offerEndDate   DateTime
-  rewardDate     DateTime? // Added missing field
-
-  rewardDescription String? // Added missing field
-  riskScale         RiskScale
-
+  categoryId      String
+  category        Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  assetTypeId     String
+  assetType       AssetType @relation(fields: [assetTypeId], references: [id], onDelete: Cascade)
+  tokenTypeId     String
+  tokenType       TokenType @relation(fields: [tokenTypeId], references: [id], onDelete: Cascade)
+  userId          String?
+  user            User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  creatorId       String?
+  offerStartDate  DateTime
+  offerEndDate    DateTime
+  rewardDate      DateTime?
+  rewardDescription String?
+  riskScale       RiskScale
   auditorsReportUrl String
   tokenImageUrl     String
   assetImageUrl     String
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 }
 
-// ======================== Enums ========================
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  adminId   String?
+  admin     Admin?   @relation(fields: [adminId], references: [id])
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
 
 enum RoleType {
   investor
@@ -227,7 +200,7 @@ enum BankAccountType {
 }
 
 enum AdminRoleType {
-  SUPER_ADMIN // Full control
+  SUPER_ADMIN
   NOTIFICATION_COMMUNICATION
   KYC_COMPLIANCE
   PRODUCT_CROWDFUNDING

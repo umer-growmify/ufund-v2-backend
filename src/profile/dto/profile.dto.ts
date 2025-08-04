@@ -31,7 +31,7 @@ export class CreateProfileDto {
   @IsString()
   @IsOptional()
   @IsUrl()
-  image?: string;
+  imageKey?: string;
   
   @ApiProperty({
     example: 'MONTHLY',
@@ -163,4 +163,148 @@ export class CreateProfileDto {
   @IsString()
   @IsNotEmpty()
   bankAddress: string;
+}
+
+
+export class UpdateProfileDto {
+  @ApiPropertyOptional({
+    example: 'INDIVIDUAL',
+    enum: UserAccountType,
+    description: 'User account type (INDIVIDUAL, COMPANY)',
+  })
+  @IsEnum(UserAccountType)
+  @IsOptional()
+  userAccountType?: UserAccountType;
+
+  @ApiPropertyOptional({
+    example: 'MONTHLY',
+    enum: IncomeFrequencyType,
+    description: 'Income frequency type (MONTHLY, YEARLY, etc.)',
+  })
+  @IsEnum(IncomeFrequencyType)
+  @IsOptional()
+  incomeFrequency?: IncomeFrequencyType;
+
+  @ApiPropertyOptional({
+    example: 50000,
+    description: 'Optional total annual revenue',
+  })
+  @IsNumber()
+  @IsOptional()
+  totalAnnualRevenue?: number;
+
+  // Personal Address
+  @ApiPropertyOptional({ example: '123 Main Street', description: 'Address Line 1' })
+  @IsString()
+  @IsOptional()
+  addressLine1?: string;
+
+  @ApiPropertyOptional({
+    example: 'Apartment 4B',
+    description: 'Optional Address Line 2',
+  })
+  @IsString()
+  @IsOptional()
+  addressLine2?: string;
+
+  @ApiPropertyOptional({ example: '12345', description: 'ZIP or postal code' })
+  @IsString()
+  @IsOptional()
+  zipCode?: string;
+
+  @ApiPropertyOptional({ example: 'New York', description: 'City name' })
+  @IsString()
+  @IsOptional()
+  city?: string;
+
+  @ApiPropertyOptional({ example: 'NY', description: 'State or province name' })
+  @IsString()
+  @IsOptional()
+  state?: string;
+
+  @ApiPropertyOptional({ example: 'USA', description: 'Country name' })
+  @IsString()
+  @IsOptional()
+  country?: string;
+
+  // Company Information
+  @ApiPropertyOptional({ example: 'Tech Solutions Ltd.', description: 'Company name' })
+  @IsString()
+  @IsOptional()
+  companyName?: string;
+
+  @ApiPropertyOptional({
+    example: 'contact@company.com',
+    description: 'Company email address',
+  })
+  @IsEmail()
+  @IsOptional()
+  companyEmail?: string;
+
+  @ApiPropertyOptional({
+    example: '+1-555-1234567',
+    description: 'Company telephone number',
+  })
+  @IsString()
+  @IsOptional()
+  companyTelephone?: string;
+
+  @ApiPropertyOptional({
+    example: '456 Corporate Blvd, Suite 100',
+    description: 'Company address',
+  })
+  @IsString()
+  @IsOptional()
+  companyAddress?: string;
+
+  // Banking Information
+  @ApiPropertyOptional({ example: 'Bank of America', description: 'Bank name' })
+  @IsString()
+  @IsOptional()
+  bankName?: string;
+
+  @ApiPropertyOptional({ example: '1234567890', description: 'Bank account number' })
+  @IsString()
+  @IsOptional()
+  accountNumber?: string;
+
+  @ApiPropertyOptional({ example: 'John Doe', description: 'Bank account holder name' })
+  @IsString()
+  @IsOptional()
+  accountName?: string;
+
+  @ApiPropertyOptional({ example: '987654321', description: 'Routing number' })
+  @IsString()
+  @IsOptional()
+  routingNumber?: string;
+
+  @ApiPropertyOptional({
+    example: 'PK12SCBL0000001123456702',
+    description: 'IBAN number',
+  })
+  @IsString()
+  @IsOptional()
+  ibanNumber?: string;
+
+  @ApiPropertyOptional({ example: 'SCBLUS33XXX', description: 'SWIFT/BIC code' })
+  @IsString()
+  @IsOptional()
+  swiftNumber?: string;
+
+  @ApiPropertyOptional({
+    example: 'SAVINGS',
+    enum: BankAccountType,
+    description: 'Type of bank account (SAVINGS, CURRENT, etc.)',
+  })
+  @IsEnum(BankAccountType)
+  @IsOptional()
+  bankAccountType?: BankAccountType;
+
+  @ApiPropertyOptional({
+    example: '789 Bank Street, New York, NY',
+    description: 'Bank branch address',
+  })
+  @IsString()
+  @IsOptional()
+  bankAddress?: string;
 }

@@ -1,57 +1,54 @@
+// src/auth/auth.module.ts
 import { Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { PrismaModule } from '../prisma/prisma.module';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-
+import { ThrottlerModule } from '@nestjs/throttler';
+import { AuthHelperService } from '../utils/auth.helper';
+import { JwtStrategy } from './strategies/jwt.strategy';
+import { FacebookStrategy, GoogleStrategy, LinkedInStrategy, TwitterStrategy } from './strategies/social.strategies';
 import { RolesGuard } from './guards/roles.guard';
-
-import { PrismaModule } from '../prisma/prisma.module';
-import {
-  FacebookStrategy,
-  GoogleStrategy,
-  JwtStrategy,
-  LinkedInStrategy,
-  TwitterStrategy,
-} from './strategies/auth.strategy';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(), // For using .env variables
-    PrismaModule, // If using Prisma inside AuthService
+    ConfigModule.forRoot(),
+    PrismaModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET'),
-        signOptions: { expiresIn: '7d' },
-      }),
+      useFactory: async (configService: ConfigService) => {
+        const secret = configService.get<string>('JWT_SECRET');
+        if (!secret) {
+          throw new Error('JWT_SECRET is not defined');
+        }
+        return {
+          secret,
+          signOptions: { expiresIn: '15m' },
+        };
+      },
       inject: [ConfigService],
     }),
+    ThrottlerModule.forRoot([{
+      ttl: 60, // seconds
+      limit: 5,
+    }]),
   ],
   controllers: [AuthController],
   providers: [
     AuthService,
+    AuthHelperService,
     JwtStrategy,
-    RolesGuard,
     GoogleStrategy,
     FacebookStrategy,
     LinkedInStrategy,
     TwitterStrategy,
-    {
-      provide: 'ROLES_GUARD',
-      useClass: RolesGuard,
-    },
+    JwtAuthGuard,
+    RolesGuard,
   ],
-  exports: [
-    JwtStrategy,
-    PassportModule,
-    JwtModule,
-    {
-      provide: 'ROLES_GUARD',
-      useClass: RolesGuard,
-    },
-  ],
+  exports: [AuthService, JwtAuthGuard, RolesGuard],
 })
 export class AuthModule {}

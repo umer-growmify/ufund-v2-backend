@@ -112,7 +112,7 @@ export class AuthHelperService {
       success: true,
       message: 'Login successful',
       user: {
-        id: entity.id,
+        id: entity.id, 
         email: entity.email,
         name: entity.name,
         roles: entity.roles,

@@ -185,6 +185,42 @@ export class ProfileService {
     };
   }
 
+  async getProfileTopHeader(userId: string, activeRole: string) {
+     const user = await this.prisma.profile.findUnique({
+      where: { userId },
+      include: {
+        user: {
+          select: {
+            firstName: true,
+            lastName: true,
+            roles: true,
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Profile not found');
+    }
+
+    // Generate signed URL for image if imageKey exists
+    const imageUrl = user.imageKey
+      ? await this.awsService.getSignedUrl(user.imageKey)
+      : null;
+
+    const { firstName, lastName } = user.user;
+    return {
+      success: true,
+      message: 'Profile top header retrieved successfully',
+      data: {
+        firstName,
+        lastName,
+        imageUrl, // Return the signed URL
+        activeRole
+      },
+    };
+  }
+
   async getProfileImage(userId: string) {
     const user = await this.prisma.profile.findUnique({
       where: { userId },

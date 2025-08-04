@@ -26,3 +26,21 @@ export interface FileTypeConfig {
   fieldName: string;
   required?: boolean;
 }
+
+export interface TokenPayload {
+  sub: string;
+  email: string;
+  role: RoleType | AdminRoleType;
+  type: 'user' | 'admin';
+}
+
+export interface TokenPair {
+  accessToken: string;
+  refreshToken: string;
+}
+
+export interface CookieTokens {
+  accessToken: string;
+  refreshToken: string;
+  isAdmin: boolean;
+}

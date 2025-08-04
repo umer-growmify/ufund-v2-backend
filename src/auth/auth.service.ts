@@ -10,7 +10,12 @@ import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
 import { Response } from 'express';
 import { PrismaService } from '../prisma/prisma.service';
-import { LoginDto, RegisterDto, SocialUserDto, AdminLoginDto } from './dto/auth.dto';
+import {
+  LoginDto,
+  RegisterDto,
+  SocialUserDto,
+  AdminLoginDto,
+} from './dto/auth.dto';
 import { ConfigService } from '@nestjs/config';
 import * as jwt from 'jsonwebtoken';
 import { RoleType, AdminRoleType } from '@prisma/client';
@@ -39,11 +44,15 @@ export class AuthService {
       roles,
     } = dto;
 
-    if (!roles || !roles.every((role) => Object.values(RoleType).includes(role))) {
+    if (
+      !roles ||
+      !roles.every((role) => Object.values(RoleType).includes(role))
+    ) {
       throw new BadRequestException('Invalid role(s) provided');
     }
 
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/;
+    const passwordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/;
     if (!passwordRegex.test(password)) {
       throw new BadRequestException(
         'Password must be at least 8 characters long and include uppercase, lowercase, and a number',
@@ -92,7 +101,12 @@ export class AuthService {
           userId: newUser.id,
           expiresAt: new Date(
             Date.now() +
-              Number(this.configService.get('REFRESH_TOKEN_EXPIRY', 7 * 24 * 60 * 60 * 1000)),
+              Number(
+                this.configService.get(
+                  'REFRESH_TOKEN_EXPIRY',
+                  7 * 24 * 60 * 60 * 1000,
+                ),
+              ),
           ),
         },
       });
@@ -123,7 +137,9 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({ where: { email } });
 
     if (!user || !user.isVerified || !user.password) {
-      throw new UnauthorizedException('Invalid credentials or unverified email');
+      throw new UnauthorizedException(
+        'Invalid credentials or unverified email',
+      );
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
@@ -138,14 +154,39 @@ export class AuthService {
       });
     }
 
-    const { accessToken, refreshToken } = await this.generateTokens(user, activeRole);
+    const { accessToken, refreshToken } = await this.generateTokens(
+      user,
+      activeRole,
+    );
 
-    this.authHelper.generateTokenAndSetCookie(user, res, rememberMe ?? false, activeRole, {
-      accessToken,
-      refreshToken,
+    await this.prisma.refreshToken.create({
+      data: {
+        token: refreshToken,
+        userId: user.id,
+        expiresAt: new Date(
+          Date.now() +
+            Number(
+              this.configService.get(
+                'REFRESH_TOKEN_EXPIRY',
+                7 * 24 * 60 * 60 * 1000,
+              ),
+            ),
+        ),
+      },
     });
 
-    return { success: true, message: 'Login successful',activeRole };
+    this.authHelper.generateTokenAndSetCookie(
+      user,
+      res,
+      rememberMe ?? false,
+      activeRole,
+      {
+        accessToken,
+        refreshToken,
+      },
+    );
+
+    return { success: true, message: 'Login successful', activeRole };
   }
 
   async adminLogin(dto: AdminLoginDto, res: Response) {
@@ -157,10 +198,34 @@ export class AuthService {
       throw new BadRequestException('Admin has no role assigned');
     }
 
-    const { accessToken, refreshToken } = await this.generateTokens(admin, admin.role);
+    const { accessToken, refreshToken } = await this.generateTokens(
+      admin,
+      admin.role,
+    );
+
+    await this.prisma.refreshToken.create({
+      data: {
+        token: refreshToken,
+        adminId: admin.id,
+        expiresAt: new Date(
+          Date.now() +
+            Number(
+              this.configService.get(
+                'REFRESH_TOKEN_EXPIRY',
+                7 * 24 * 60 * 60 * 1000,
+              ),
+            ),
+        ),
+      },
+    });
 
     this.authHelper.generateTokenAndSetCookie(
-      { id: admin.id, email: admin.email, name: admin.name, roles: [admin.role] },
+      {
+        id: admin.id,
+        email: admin.email,
+        name: admin.name,
+        roles: [admin.role],
+      },
       res,
       true,
       admin.role,
@@ -180,7 +245,8 @@ export class AuthService {
   }
 
   async socialLogin(socialUser: SocialUserDto, res: Response) {
-    const { email, provider, providerId, activeRole, firstName, lastName } = socialUser;
+    const { email, provider, providerId, activeRole, firstName, lastName } =
+      socialUser;
 
     if (!Object.values(RoleType).includes(activeRole)) {
       throw new BadRequestException('Invalid role provided');
@@ -202,10 +268,16 @@ export class AuthService {
         existingSocialUser,
         activeRole,
       );
-      this.authHelper.generateTokenAndSetCookie(existingSocialUser, res, true, activeRole, {
-        accessToken,
-        refreshToken,
-      });
+      this.authHelper.generateTokenAndSetCookie(
+        existingSocialUser,
+        res,
+        true,
+        activeRole,
+        {
+          accessToken,
+          refreshToken,
+        },
+      );
 
       return { success: true, message: 'Social login successful' };
     }
@@ -240,7 +312,12 @@ export class AuthService {
           userId: user.id,
           expiresAt: new Date(
             Date.now() +
-              Number(this.configService.get('REFRESH_TOKEN_EXPIRY', 7 * 24 * 60 * 60 * 1000)),
+              Number(
+                this.configService.get(
+                  'REFRESH_TOKEN_EXPIRY',
+                  7 * 24 * 60 * 60 * 1000,
+                ),
+              ),
           ),
         },
       });
@@ -248,7 +325,12 @@ export class AuthService {
       return user;
     });
 
-    const { accessToken, refreshToken } = await this.generateTokens(newUser, activeRole);
+    const { accessToken, refreshToken } = await this.generateTokens(
+      newUser,
+      activeRole,
+    );
+
+    
     this.authHelper.generateTokenAndSetCookie(newUser, res, true, activeRole, {
       accessToken,
       refreshToken,
@@ -322,61 +404,136 @@ export class AuthService {
       success: true,
       user: {
         ...userData,
-        activeRole: user.activeRole || userData.roles[0],
+        activeRole: user.activeRole,
       },
     };
   }
 
   async refreshToken(refreshToken: string, res: Response) {
-    const tokenRecord = await this.prisma.refreshToken.findFirst({
-      where: { token: refreshToken, expiresAt: { gt: new Date() } },
-      include: { user: true, admin: true },
+    console.log('refreshToken', refreshToken);
+
+    return this.prisma.$transaction(async (prisma) => {
+      // First, try to find a refresh token for a user
+      const userToken = await prisma.refreshToken.findFirst({
+        where: {
+          token: refreshToken,
+          expiresAt: { gt: new Date() }, // Check expiration
+        },
+        include: { user: true },
+      });
+
+      console.log('userToken', userToken);
+
+      // If not found, try to find a refresh token for an admin
+      const adminToken = !userToken
+        ? await prisma.refreshToken.findFirst({
+            where: {
+              token: refreshToken,
+              adminId: { not: null },
+              expiresAt: { gt: new Date() }, // Check expiration
+            },
+            include: { admin: true },
+          })
+        : null;
+
+      if (userToken) {
+        // User token logic
+        if (!userToken.user) {
+          throw new UnauthorizedException('User not found for refresh token');
+        }
+
+        const activeRole = userToken.user.roles[0];
+        const { accessToken, refreshToken: newRefreshToken } =
+          await this.generateTokens(userToken.user, activeRole);
+
+        // Delete old token and create new one
+        await prisma.refreshToken.delete({ where: { id: userToken.id } });
+        await prisma.refreshToken.create({
+          data: {
+            token: newRefreshToken,
+            userId: userToken.userId,
+            expiresAt: new Date(
+              Date.now() +
+                Number(
+                  this.configService.get(
+                    'REFRESH_TOKEN_EXPIRY',
+                    7 * 24 * 60 * 60 * 1000,
+                  ),
+                ),
+            ),
+          },
+        });
+
+        this.authHelper.generateTokenAndSetCookie(
+          {
+            id: userToken.user.id,
+            email: userToken.user.email,
+            roles: userToken.user.roles,
+            name: `${userToken.user.firstName} ${userToken.user.lastName}`,
+          },
+          res,
+          true,
+          activeRole,
+          {
+            accessToken,
+            refreshToken: newRefreshToken,
+            cookieName: 'accessToken',
+          },
+        );
+      } else if (adminToken) {
+        // Admin token logic
+        if (!adminToken.admin) {
+          throw new UnauthorizedException('Admin not found for refresh token');
+        }
+
+        const { accessToken, refreshToken: newRefreshToken } =
+          await this.generateTokens(adminToken.admin, adminToken.admin.role);
+
+        // Delete old token and create new one
+        await prisma.refreshToken.delete({ where: { id: adminToken.id } });
+        await prisma.refreshToken.create({
+          data: {
+            token: newRefreshToken,
+            adminId: adminToken.adminId,
+            expiresAt: new Date(
+              Date.now() +
+                Number(
+                  this.configService.get(
+                    'REFRESH_TOKEN_EXPIRY',
+                    7 * 24 * 60 * 60 * 1000,
+                  ),
+                ),
+            ),
+          },
+        });
+
+        this.authHelper.generateTokenAndSetCookie(
+          {
+            id: adminToken.admin.id,
+            email: adminToken.admin.email,
+            roles: [adminToken.admin.role],
+            name: adminToken.admin.name,
+          },
+          res,
+          true,
+          adminToken.admin.role,
+          {
+            accessToken,
+            refreshToken: newRefreshToken,
+            cookieName: 'admin_token',
+          },
+        );
+      } else {
+        throw new UnauthorizedException('Invalid or expired refresh token');
+      }
+
+      return { success: true, message: 'Token refreshed successfully' };
     });
-
-    if (!tokenRecord || (!tokenRecord.user && !tokenRecord.admin)) {
-      throw new UnauthorizedException('Invalid or expired refresh token');
-    }
-
-    const entity = tokenRecord.user || tokenRecord.admin!;
-    const activeRole = tokenRecord.user ? tokenRecord.user.roles[0] : tokenRecord.admin!.role;
-
-    const { accessToken, refreshToken: newRefreshToken } = await this.generateTokens(
-      entity,
-      activeRole,
-    );
-
-    await this.prisma.refreshToken.update({
-      where: { id: tokenRecord.id },
-      data: {
-        token: newRefreshToken,
-        expiresAt: new Date(
-          Date.now() +
-            Number(this.configService.get('REFRESH_TOKEN_EXPIRY', 7 * 24 * 60 * 60 * 1000)),
-        ),
-      },
-    });
-
-    this.authHelper.generateTokenAndSetCookie(
-      {
-        id: entity.id,
-        email: entity.email,
-        roles: tokenRecord.user ? tokenRecord.user.roles : [tokenRecord.admin!.role],
-        name: tokenRecord.admin ? tokenRecord.admin.name : undefined,
-      },
-      res,
-      true,
-      activeRole,
-      {
-        accessToken,
-        refreshToken: newRefreshToken,
-        cookieName: tokenRecord.admin ? 'admin_token' : 'accessToken',
-      },
-    );
-
-    return { success: true, message: 'Token refreshed successfully' };
   }
-
-  private async generateTokens(entity: any, activeRole: RoleType | AdminRoleType) {
+  private async generateTokens(
+    entity: any,
+    activeRole: RoleType | AdminRoleType,
+  ) {
     const payload = {
       sub: entity.id,
       email: entity.email,
@@ -384,7 +541,10 @@ export class AuthService {
       type: entity.role ? 'admin' : 'user',
     };
 
-    const accessTokenEx = this.configService.get<number>('ACCESS_TOKEN_EXPIRY', 15 * 60 ); // Use .env variable
+    const accessTokenEx = this.configService.get<number>(
+      'ACCESS_TOKEN_EXPIRY',
+      15 * 60,
+    ); // Use .env variable
 
     const accessToken = await this.generateJwt(payload, accessTokenEx);
     const refreshToken = crypto.randomBytes(64).toString('hex');

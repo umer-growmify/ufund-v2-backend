@@ -94,10 +94,9 @@ export class AuthController {
   @ApiOperation({ summary: 'Check authentication status' })
   @ApiResponse({ status: 200, description: 'Returns current user data' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  
   async checkAuth(@Req() req: Request) {
     // console.log(req);
-    
+
     console.log('Checking auth for user:');
     return this.authService.checkAuth(req.user);
   }
@@ -116,10 +115,18 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Token refreshed successfully' })
   @ApiResponse({ status: 401, description: 'Invalid or expired refresh token' })
   async refresh(
-    @Body('refreshToken') refreshToken: string,
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
+    const refreshToken = req?.cookies?.refreshToken;
+
+
+    if (!refreshToken) {
+      console.log('No refresh token found in cookies');
+    }
+
     return this.authService.refreshToken(refreshToken, res);
+
   }
 
   @Get('google')

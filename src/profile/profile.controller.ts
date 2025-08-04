@@ -193,4 +193,28 @@ export class ProfileController {
 
     return getProfileImage;
   }
+
+  @Get('top-header-profile')
+  @ApiOperation({ summary: 'Get profile top header (Investor, Campaigner)' })
+  @ApiResponse({ status: 200, description: 'Profile top header fetched successfully' })
+  @ApiResponse({ status: 404, description: 'Profile not found' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.investor, Role.campaigner)
+  async getProfileTopHeader(
+    @Req() req: RequestWithUser,
+  ) {
+    const userId = req.user.id;
+    const activeRole = req.user.activeRole;
+
+    const getProfileTopHeader = await this.profileService.getProfileTopHeader(
+      userId,
+      activeRole,
+    );
+
+    if (!getProfileTopHeader) {
+      throw new NotFoundException('Profile not found');
+    }
+
+    return getProfileTopHeader;
+  }
 }

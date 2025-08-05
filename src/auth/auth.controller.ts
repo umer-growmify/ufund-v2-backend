@@ -1,34 +1,33 @@
 import {
-  Controller,
-  Post,
-  Get,
-  Body,
-  Res,
-  Req,
-  UseGuards,
-  Query,
   BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Post,
+  Query,
+  Req,
+  Res,
+  UseGuards,
 } from '@nestjs/common';
-import { AuthService } from './auth.service';
+import { ConfigService } from '@nestjs/config';
+import { AuthGuard } from '@nestjs/passport';
 import {
-  LoginDto,
-  RegisterDto,
-  SocialUserDto,
-  AdminLoginDto,
-} from './dto/auth.dto';
-import { Request, Response } from 'express';
-import { RoleType } from '@prisma/client';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiQuery,
   ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
 } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
-import { ConfigService } from '@nestjs/config';
+import { RoleType } from '@prisma/client';
+import { Request, Response } from 'express';
+import { AuthService } from './auth.service';
+import {
+  AdminLoginDto,
+  LoginDto,
+  RegisterDto
+} from './dto/auth.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from './guards/roles.guard';
 
 @ApiTags('Auth')

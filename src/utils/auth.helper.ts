@@ -1,9 +1,9 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { Response } from 'express';
-import * as Mailgen from 'mailgen';
-import * as nodemailer from 'nodemailer';
+import Mailgen from 'mailgen';
+import  nodemailer from 'nodemailer';
 import { ConfigService } from '@nestjs/config';
-import * as bcrypt from 'bcryptjs';
+import  bcrypt from 'bcryptjs';
 import { RoleType, AdminRoleType } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 

@@ -24,7 +24,7 @@ export interface FileTypeConfig {
   allowedMimeTypes: string[];
   maxSize: number;
   fieldName: string;
-  required?: boolean;
+  required?: boolean; 
 }
 
 export interface TokenPayload {

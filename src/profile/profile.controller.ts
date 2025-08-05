@@ -31,6 +31,7 @@ import {
 import { FileValidationInterceptor } from 'src/utils/file-validation.interceptor';
 import { prfileFileConfig } from 'src/config/file-config';
 import { Roles } from 'src/auth/guards/roles.decorator';
+import { UserUpdateProfileDto } from 'src/auth/dto/auth.dto';
 
 @ApiTags('Profile')
 @ApiBearerAuth()
@@ -128,6 +129,7 @@ export class ProfileController {
   async updateProfile(
     @Req() req: RequestWithUser,
     @Body() updateProfileDto: UpdateProfileDto,
+    @Body() userProfileDto: UserUpdateProfileDto,
     @UploadedFile(
       new ParseFilePipe({
         validators: [

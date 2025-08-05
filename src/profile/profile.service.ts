@@ -89,6 +89,8 @@ export class ProfileService {
       where: { userId },
     });
 
+    
+
     if (!existingProfile) {
       throw new NotFoundException('Profile not found');
     }

@@ -6,6 +6,7 @@ import {
 import { CreateProfileDto, UpdateProfileDto } from './dto/profile.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AwsService } from 'src/aws/aws.service';
+import { UpdateProfileUserDto } from 'src/auth/dto/auth.dto';
 
 @Injectable()
 export class ProfileService {
@@ -14,139 +15,111 @@ export class ProfileService {
     private readonly awsService: AwsService,
   ) {}
 
-  async createProfile(
-    dto: CreateProfileDto,
-    userId: string,
-    file?: Express.Multer.File,
-  ) {
-    // Check if profile already exists
-    const existingProfile = await this.prisma.profile.findUnique({
-      where: { userId },
-    });
-
-    if (existingProfile) {
-      throw new BadRequestException('Profile already exists for this user');
-    }
-
-    // Handle image upload to S3
-    let imageKey: string | null = null;
-    let imageUrl: string | null = null;
-    if (file) {
-      const { key, url } = await this.awsService.uploadFile(
-        file,
-        userId,
-        'profiles',
-      );
-      imageKey = key;
-      imageUrl = url;
-    }
-
-    // Create profile with S3 key if uploaded
-    const newUser = await this.prisma.profile.create({
-      data: {
-        userId,
-        userAccountType: dto.userAccountType,
-        imageKey, // Store the S3 key
-        incomeFrequency: dto.incomeFrequency,
-        totalAnnualRevenue: Number(dto.totalAnnualRevenue) || 0,
-        addressLine1: dto.addressLine1,
-        addressLine2: dto.addressLine2,
-        zipCode: dto.zipCode,
-        city: dto.city,
-        state: dto.state,
-        country: dto.country,
-        companyName: dto.companyName,
-        companyEmail: dto.companyEmail,
-        companyTelephone: dto.companyTelephone,
-        companyAddress: dto.companyAddress,
-        bankName: dto.bankName,
-        accountNumber: dto.accountNumber,
-        accountName: dto.accountName,
-        routingNumber: dto.routingNumber,
-        ibanNumber: dto.ibanNumber,
-        swiftNumber: dto.swiftNumber,
-        bankAccountType: dto.bankAccountType,
-        bankAddress: dto.bankAddress,
-      },
-    });
-
-    return {
-      success: true,
-      message: 'Profile created successfully',
-      data: {
-        ...newUser,
-        imageUrl, // Return the signed URL
-      },
-    };
-  }
-
-  async updateProfile(
-    dto: UpdateProfileDto,
+  async createAndUpdateProfile(
+    createProfile: CreateProfileDto,
+    updateProfile: UpdateProfileDto,
     userId: string,
     file?: Express.Multer.File,
   ) {
     const existingProfile = await this.prisma.profile.findUnique({
       where: { userId },
     });
-
-    
 
     if (!existingProfile) {
-      throw new NotFoundException('Profile not found');
-    }
+      // Upload file to S3 if provided
+      let imageKey: string | undefined;
+      let imageUrl: string | undefined;
 
-    let imageKey: string | null = existingProfile.imageKey;
-    let imageUrl: string | null = existingProfile.imageKey
-      ? await this.awsService.getSignedUrl(existingProfile.imageKey)
-      : null;
+      if (file) {
+        const { key, url } = await this.awsService.uploadFile(
+          file,
+          userId,
+          'profiles',
+        );
+        imageKey = key;
+        imageUrl = url;
+      }
 
-    if (file) {
-      const { key, url } = await this.awsService.uploadFile(
-        file,
-        userId,
-        'profiles',
+      // Create new profile
+      const userCreated = await this.prisma.profile.create({
+        data: {
+          userId,
+          imageKey,
+          ...createProfile,
+        },
+      });
+
+      return {
+        success: true,
+        message: 'Profile created successfully',
+        userCreated,
+        imageUrl,
+      };
+    } else {
+      let newImageKey = existingProfile.imageKey;
+
+      const hasFileUpdate = !!file;
+      const hasDtoUpdate = Object.keys(updateProfile).length > 0;
+
+      if (!hasFileUpdate && !hasDtoUpdate) {
+        throw new BadRequestException(
+          'No changes detected for update operation.',
+        );
+      }
+
+      if (hasFileUpdate) {
+        if (!newImageKey) {
+          throw new BadRequestException('No existing image to update.');
+        }
+        const { key, url } = await this.awsService.updateFile(
+          file,
+          newImageKey,
+        );
+        newImageKey = key;
+      }
+
+      const updatedProfile = await this.prisma.profile.update({
+        where: { userId },
+        data: {
+          ...(hasFileUpdate && { imageKey: newImageKey }),
+          ...(hasDtoUpdate && updateProfile),
+        },
+      });
+
+      if (!updatedProfile.imageKey) {
+        throw new BadRequestException('No image key found for this profile.');
+      }
+      const imageUrl = await this.awsService.getSignedUrl(
+        updatedProfile.imageKey,
       );
-      imageKey = key;
-      imageUrl = url;
-    }
 
-    const updatedProfile = await this.prisma.profile.update({
-      where: { userId },
-      data: {
-        userAccountType: dto.userAccountType,
-        incomeFrequency: dto.incomeFrequency,
-        totalAnnualRevenue: dto.totalAnnualRevenue
-          ? Number(dto.totalAnnualRevenue)
-          : undefined,
-        addressLine1: dto.addressLine1,
-        addressLine2: dto.addressLine2,
-        zipCode: dto.zipCode,
-        city: dto.city,
-        state: dto.state,
-        country: dto.country,
-        companyName: dto.companyName,
-        companyEmail: dto.companyEmail,
-        companyTelephone: dto.companyTelephone,
-        companyAddress: dto.companyAddress,
-        bankName: dto.bankName,
-        accountNumber: dto.accountNumber,
-        accountName: dto.accountName,
-        routingNumber: dto.routingNumber,
-        ibanNumber: dto.ibanNumber,
-        swiftNumber: dto.swiftNumber,
-        bankAccountType: dto.bankAccountType,
-        bankAddress: dto.bankAddress,
-        imageKey,
-      },
+      return {
+        success: true,
+        message: 'Profile updated successfully',
+        updatedProfile,
+        imageUrl
+      };
+    }
+  }
+
+  async updateProfileUser(userId: string, updateProfileUserDto: UpdateProfileUserDto){
+    // check the user exists
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    // update just those fields which user want
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: updateProfileUserDto,
     });
 
     return {
       success: true,
-      message: 'Profile updated successfully',
-      data: {
-        ...updatedProfile,
-        imageUrl,
-      },
+      message: 'User updated successfully',
     };
   }
 
@@ -188,7 +161,7 @@ export class ProfileService {
   }
 
   async getProfileTopHeader(userId: string, activeRole: string) {
-     const user = await this.prisma.profile.findUnique({
+    const user = await this.prisma.profile.findUnique({
       where: { userId },
       include: {
         user: {
@@ -218,29 +191,9 @@ export class ProfileService {
         firstName,
         lastName,
         imageUrl, // Return the signed URL
-        activeRole
+        activeRole,
       },
     };
   }
 
-  async getProfileImage(userId: string) {
-    const user = await this.prisma.profile.findUnique({
-      where: { userId },
-      select: { imageKey: true },
-    });
-
-    if (!user || !user.imageKey) {
-      throw new NotFoundException('Profile image not found');
-    }
-
-    const signedUrl = await this.awsService.getSignedUrl(user.imageKey);
-
-    return {
-      success: true,
-      message: 'Profile image URL generated successfully',
-      data: {
-        imageUrl: signedUrl,
-      },
-    };
-  }
 }

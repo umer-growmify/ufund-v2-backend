@@ -6,32 +6,27 @@ import {
   Post,
   Put,
   Req,
-  UseGuards,
-  UseInterceptors,
   UploadedFile,
-  ParseFilePipe,
-  FileTypeValidator,
-  MaxFileSizeValidator,
+  UseGuards,
+  UseInterceptors
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { RoleType as Role } from '@prisma/client';
-import { RequestWithUser } from 'src/types/types';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { CreateProfileDto, UpdateProfileDto } from './dto/profile.dto';
-import { ProfileService } from './profile.service';
 import {
   ApiBearerAuth,
   ApiOperation,
   ApiResponse,
-  ApiTags,
-  ApiConsumes,
-  ApiBody,
+  ApiTags
 } from '@nestjs/swagger';
-import { FileValidationInterceptor } from 'src/utils/file-validation.interceptor';
-import { prfileFileConfig } from 'src/config/file-config';
+import { RoleType as Role } from '@prisma/client';
 import { Roles } from 'src/auth/guards/roles.decorator';
-import { UserUpdateProfileDto } from 'src/auth/dto/auth.dto';
+import { prfileFileConfig } from 'src/config/file-config';
+import { RequestWithUser } from 'src/types/types';
+import { FileValidationInterceptor } from 'src/utils/file-validation.interceptor';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { CreateProfileDto, UpdateProfileDto } from './dto/profile.dto';
+import { ProfileService } from './profile.service';
+import { UpdateProfileUserDto } from 'src/auth/dto/auth.dto';
 
 @ApiTags('Profile')
 @ApiBearerAuth()
@@ -39,125 +34,48 @@ import { UserUpdateProfileDto } from 'src/auth/dto/auth.dto';
 export class ProfileController {
   constructor(private readonly profileService: ProfileService) {}
 
-  @Post('create')
-  @ApiOperation({ summary: 'Create profile (Investor, Campaigner)' })
-  @ApiResponse({ status: 201, description: 'Profile created successfully' })
-  @ApiResponse({
-    status: 404,
-    description: 'User not found or profile not created',
+  @Post('create-and-update-profile')
+  @ApiOperation({
+    summary:
+      'If the profile is not found then create a new profile; if found and input fields changed, update it (Investor, Campaigner)',
   })
-  @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    description: 'Profile data and optional image file',
-    type: CreateProfileDto,
-    schema: {
-      type: 'object',
-      properties: {
-        image: {
-          type: 'string',
-          format: 'binary',
-        },
-      },
-    },
+  @ApiResponse({
+    status: 200,
+    description: 'Profile created and updated successfully',
   })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.investor, Role.campaigner)
   @UseInterceptors(
-    FileInterceptor('image'),
+    FileInterceptor('image'), // Multer interceptor for a single file field named "profile"
     new FileValidationInterceptor(prfileFileConfig),
   )
-  async createProfile(
+  async createAndUpdateProfile(
     @Req() req: RequestWithUser,
-    @Body() createProfileDto: CreateProfileDto,
-    @UploadedFile(
-      new ParseFilePipe({
-        validators: [
-          new FileTypeValidator({ fileType: /(jpg|jpeg|png)$/ }),
-          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }),
-        ],
-        fileIsRequired: false,
-      }),
-    )
-    file?: Express.Multer.File,
+    @Body() createProfile: CreateProfileDto,
+    @Body() updateProfile: UpdateProfileDto,
+    @UploadedFile() file?: Express.Multer.File,
   ) {
     const userId = req.user.id;
-    console.log(`Creating profile for user ID: ${userId}`);
-
-    if (!userId) {
-      throw new NotFoundException('User not found');
-    }
-
-    const createProfile = await this.profileService.createProfile(
-      createProfileDto,
-      userId,
-      file,
-    );
-
-    if (!createProfile) {
-      throw new NotFoundException('Profile not created');
-    }
-    return createProfile;
+    return this.profileService.createAndUpdateProfile(createProfile, updateProfile,userId, file);
   }
 
-  @Put('update')
-  @ApiOperation({ summary: 'Update profile (Investor, Campaigner)' })
-  @ApiResponse({ status: 200, description: 'Profile updated successfully' })
-  @ApiResponse({
-    status: 404,
-    description: 'User not found or profile not found',
+  @Put('update-profile-user')
+  @ApiOperation({
+    summary:
+      'this will update the user in the profile page',
   })
-  @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    description: 'Profile data and optional image file for update',
-    type: UpdateProfileDto,
-    schema: {
-      type: 'object',
-      properties: {
-        image: {
-          type: 'string',
-          format: 'binary',
-        },
-      },
-    },
+  @ApiResponse({
+    status: 200,
+    description: 'Profile created and updated successfully',
   })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.investor, Role.campaigner)
-  @UseInterceptors(
-    FileInterceptor('image'),
-    new FileValidationInterceptor(prfileFileConfig),
-  )
-  async updateProfile(
+  async updateProfileUser(
     @Req() req: RequestWithUser,
-    @Body() updateProfileDto: UpdateProfileDto,
-    @Body() userProfileDto: UserUpdateProfileDto,
-    @UploadedFile(
-      new ParseFilePipe({
-        validators: [
-          new FileTypeValidator({ fileType: /(jpg|jpeg|png)$/ }),
-          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }),
-        ],
-        fileIsRequired: false,
-      }),
-    )
-    file?: Express.Multer.File,
+    @Body() updateProfileUserDto: UpdateProfileUserDto
   ) {
     const userId = req.user.id;
-    console.log(`Updating profile for user ID: ${userId}`);
-
-    if (!userId) {
-      throw new NotFoundException('User not found');
-    }
-
-    const updatedProfile = await this.profileService.updateProfile(
-      updateProfileDto,
-      userId,
-      file,
-    );
-
-    if (!updatedProfile) {
-      throw new NotFoundException('Profile not updated');
-    }
-    return updatedProfile;
+    return this.profileService.updateProfileUser(userId, updateProfileUserDto);
   }
 
   @Get('me')
@@ -178,33 +96,18 @@ export class ProfileController {
     return getProfile;
   }
 
-  @Get('image')
-  @ApiOperation({ summary: 'Get signed URL for profile image (Investor, Campaigner)' })
-  @ApiResponse({ status: 200, description: 'Signed URL generated successfully' })
-  @ApiResponse({ status: 404, description: 'Profile image not found' })
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.investor, Role.campaigner)
-  async getProfileImage(@Req() req: RequestWithUser) {
-    const userId = req.user.id;
 
-    const getProfileImage = await this.profileService.getProfileImage(userId);
-
-    if (!getProfileImage) {
-      throw new NotFoundException('Profile image not found');
-    }
-
-    return getProfileImage;
-  }
 
   @Get('top-header-profile')
   @ApiOperation({ summary: 'Get profile top header (Investor, Campaigner)' })
-  @ApiResponse({ status: 200, description: 'Profile top header fetched successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Profile top header fetched successfully',
+  })
   @ApiResponse({ status: 404, description: 'Profile not found' })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.investor, Role.campaigner)
-  async getProfileTopHeader(
-    @Req() req: RequestWithUser,
-  ) {
+  async getProfileTopHeader(@Req() req: RequestWithUser) {
     const userId = req.user.id;
     const activeRole = req.user.activeRole;
 

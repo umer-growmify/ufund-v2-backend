@@ -1,4 +1,15 @@
-import { IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsOptional, IsPhoneNumber, IsString, MinLength, IsArray, IsUUID } from 'class-validator';
+import {
+  IsBoolean,
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsPhoneNumber,
+  IsString,
+  MinLength,
+  IsArray,
+  IsUUID,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { RoleType } from '@prisma/client';
 
@@ -116,18 +127,20 @@ export class SocialUserDto {
   activeRole: RoleType;
 }
 
-export class UserUpdateProfileDto {
-
+export class UpdateProfileUserDto {
   @ApiProperty({ example: 'john@example.com' })
   @IsEmail()
+  @IsOptional()
   email: string;
 
   @ApiProperty({ example: 'John' })
   @IsString()
+  @IsOptional()
   firstName: string;
 
   @ApiProperty({ example: 'Doe' })
   @IsString()
+  @IsOptional()
   lastName: string;
 
   @ApiPropertyOptional({ example: '+1234567890' })
@@ -139,5 +152,4 @@ export class UserUpdateProfileDto {
   @IsOptional()
   @IsString()
   countryCode?: string;
-
 }

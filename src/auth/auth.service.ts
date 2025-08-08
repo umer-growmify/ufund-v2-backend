@@ -6,9 +6,9 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import  bcrypt from 'bcryptjs';
-import crypto from 'crypto';
+import * as bcrypt from 'bcryptjs';
 import { Response } from 'express';
+import * as crypto from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   LoginDto,
@@ -17,7 +17,7 @@ import {
   AdminLoginDto,
 } from './dto/auth.dto';
 import { ConfigService } from '@nestjs/config';
-import jwt from 'jsonwebtoken';
+import * as jwt from 'jsonwebtoken';
 import { RoleType, AdminRoleType } from '@prisma/client';
 import { AuthHelperService } from 'src/utils/auth.helper';
 
@@ -136,6 +136,9 @@ export class AuthService {
 
     const user = await this.prisma.user.findUnique({ where: { email } });
 
+    console.log('User:', user);
+    
+
     if (!user || !user.isVerified || !user.password) {
       throw new UnauthorizedException(
         'Invalid credentials or unverified email',
@@ -146,6 +149,7 @@ export class AuthService {
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
+    
 
     if (!user.roles.includes(activeRole)) {
       await this.prisma.user.update({
@@ -154,11 +158,13 @@ export class AuthService {
       });
     }
 
+    
+
     const { accessToken, refreshToken } = await this.generateTokens(
       user,
-      activeRole,
+      activeRole, 
     );
-
+    
     await this.prisma.refreshToken.create({
       data: {
         token: refreshToken,
@@ -543,6 +549,7 @@ export class AuthService {
       role: activeRole,
       type: entity.role ? 'admin' : 'user',
     };
+
 
     const accessTokenEx = this.configService.get<number>(
       'ACCESS_TOKEN_EXPIRY',

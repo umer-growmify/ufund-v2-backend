@@ -308,3 +308,4 @@ export class UpdateProfileDto {
   @IsOptional()
   bankAddress?: string;
 }
+

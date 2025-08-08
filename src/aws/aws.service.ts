@@ -58,6 +58,35 @@ export class AwsService {
     }
   }
 
+  async updateFile(
+  file: Express.Multer.File,
+  key: string, 
+): Promise<{ key: string; url: string }> {
+  const bucket = this.configService.get<string>('AWS_S3_BUCKET');
+  if (!bucket) {
+    throw new InternalServerErrorException(
+      'AWS_S3_BUCKET is not defined in environment variables.',
+    );
+  }
+
+  const params = {
+    Bucket: bucket,
+    Key: key, // same key → will overwrite the existing file
+    Body: file.buffer,
+    ContentType: file.mimetype,
+  };
+
+  try {
+    await this.s3Client.send(new PutObjectCommand(params));
+    const signedUrl = await this.getSignedUrl(key);
+    return { key, url: signedUrl };
+  } catch (error) {
+    throw new InternalServerErrorException(
+      `Failed to update file in S3: ${error.message}`,
+    );
+  }
+}
+
   async getSignedUrl(key: string, expiresIn: number = 604800): Promise<string> {
     const bucket = this.configService.get<string>('AWS_S3_BUCKET');
     if (!bucket) {

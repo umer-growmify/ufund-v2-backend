@@ -21,6 +21,8 @@ export class ProfileService {
     userId: string,
     file?: Express.Multer.File,
   ) {
+    console.log('createAndUpdateProfile - User ID:', updateProfile);
+
     const existingProfile = await this.prisma.profile.findUnique({
       where: { userId },
     });
@@ -97,12 +99,15 @@ export class ProfileService {
         success: true,
         message: 'Profile updated successfully',
         updatedProfile,
-        imageUrl
+        imageUrl,
       };
     }
   }
 
-  async updateProfileUser(userId: string, updateProfileUserDto: UpdateProfileUserDto){
+  async updateProfileUser(
+    userId: string,
+    updateProfileUserDto: UpdateProfileUserDto,
+  ) {
     // check the user exists
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -196,4 +201,198 @@ export class ProfileService {
     };
   }
 
+  async createUpdateProfileUser(
+    userId: string,
+    data: UpdateProfileDto,
+    file?: Express.Multer.File,
+  ) {
+    const existingProfile = await this.prisma.profile.findUnique({
+      where: { userId },
+      include: { user: true }, // Get current profile+user data
+    });
+
+    console.log('data ', data);
+
+    if (existingProfile) {
+      // Profile exists - UPDATE scenario
+      let imageKey: string | undefined;
+      let imageUrl: string | undefined;
+
+      if (file) {
+        const { key, url } = await this.awsService.updateFile(
+          file,
+          existingProfile.imageKey!,
+        );
+        imageKey = key;
+        imageUrl = url;
+      }
+
+      const userData = {
+        email: data.email,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        phoneNumber: data.phoneNumber,
+        countryCode: data.countryCode,
+      };
+
+      console.log('User Data:', userData);
+
+      // Only include imageKey if it's defined (file was uploaded)
+      const profileData: any = {
+        userAccountType: data.userAccountType,
+        incomeFrequency: data.incomeFrequency,
+        totalAnnualRevenue: data.totalAnnualRevenue,
+        addressLine1: data.addressLine1,
+        addressLine2: data.addressLine2,
+        zipCode: data.zipCode,
+        city: data.city,
+        state: data.state,
+        country: data.country,
+        companyName: data.companyName,
+        companyEmail: data.companyEmail,
+        companyTelephone: data.companyTelephone,
+        companyAddress: data.companyAddress,
+        bankName: data.bankName,
+        accountNumber: data.accountNumber,
+        accountName: data.accountName,
+        routingNumber: data.routingNumber,
+        ibanNumber: data.ibanNumber,
+        swiftNumber: data.swiftNumber,
+        bankAccountType: data.bankAccountType,
+        bankAddress: data.bankAddress,
+      };
+
+      // Only add imageKey if we have a new image
+      if (imageKey) {
+        profileData.imageKey = imageKey;
+      }
+
+      console.log('Profile Data:', profileData);
+
+      // Update both user and profile in a transaction
+      const [updatedUser, updatedProfile] = await this.prisma.$transaction([
+        this.prisma.user.update({
+          where: { id: userId },
+          data: userData,
+        }),
+        this.prisma.profile.update({
+          where: { userId },
+          data: profileData,
+        }),
+      ]);
+
+      // Fetch updated profile with user data
+      const freshProfile = await this.prisma.profile.findUnique({
+        where: { userId },
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              firstName: true,
+              lastName: true,
+              phoneNumber: true,
+              countryCode: true,
+              roles: true,
+            },
+          },
+        },
+      });
+
+      return {
+        success: true,
+        message: 'Profile updated successfully',
+        existingProfile: freshProfile,
+        imageUrl,
+      };
+    } else {
+      let imageKey: string | undefined;
+      let imageUrl: string | undefined;
+
+      if (file) {
+        const { key, url } = await this.awsService.uploadFile(
+          file,
+          userId,
+          'profiles',
+        );
+        imageKey = key;
+        imageUrl = url;
+      }
+
+      const userData = {
+        email: data.email,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        phoneNumber: data.phoneNumber,
+        countryCode: data.countryCode,
+      };
+
+      console.log('User Data:', userData);
+
+      // Build profile data with required fields having default values
+      const profileData = {
+        userId: userId, // This is required for profile creation
+        imageKey: imageKey,
+        userAccountType: data.userAccountType, // Has default in schema
+        incomeFrequency: data.incomeFrequency, // Has default in schema
+        totalAnnualRevenue: data.totalAnnualRevenue, // Has default in schema
+        // Required fields - provide empty string if undefined
+        addressLine1: data.addressLine1 || '',
+        addressLine2: data.addressLine2,
+        zipCode: data.zipCode || '',
+        city: data.city || '',
+        state: data.state || '',
+        country: data.country || '',
+        companyName: data.companyName || '',
+        companyEmail: data.companyEmail || '',
+        companyTelephone: data.companyTelephone || '',
+        companyAddress: data.companyAddress || '',
+        bankName: data.bankName || '',
+        accountNumber: data.accountNumber || '',
+        accountName: data.accountName || '',
+        routingNumber: data.routingNumber || '',
+        ibanNumber: data.ibanNumber || '',
+        swiftNumber: data.swiftNumber || '',
+        bankAccountType: data.bankAccountType, // Has default in schema
+        bankAddress: data.bankAddress || '',
+      };
+
+      console.log('Profile Data:', profileData);
+
+      // Update user and create profile in a transaction
+      const [updatedUser, createdProfile] = await this.prisma.$transaction([
+        this.prisma.user.update({
+          where: { id: userId },
+          data: userData,
+        }),
+        this.prisma.profile.create({
+          data: profileData,
+        }),
+      ]);
+
+      const freshProfile = await this.prisma.profile.findUnique({
+        where: { userId },
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              firstName: true,
+              lastName: true,
+              phoneNumber: true,
+              countryCode: true,
+              roles: true,
+            },
+          },
+        },
+      });
+
+      return {
+        success: true,
+        message: 'Profile created successfully',
+        existingProfile: freshProfile,
+        imageUrl,
+      };
+    }
+  }
 }

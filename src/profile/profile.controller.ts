@@ -8,14 +8,14 @@ import {
   Req,
   UploadedFile,
   UseGuards,
-  UseInterceptors
+  UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiBearerAuth,
   ApiOperation,
   ApiResponse,
-  ApiTags
+  ApiTags,
 } from '@nestjs/swagger';
 import { RoleType as Role } from '@prisma/client';
 import { Roles } from 'src/auth/guards/roles.decorator';
@@ -56,13 +56,19 @@ export class ProfileController {
     @UploadedFile() file?: Express.Multer.File,
   ) {
     const userId = req.user.id;
-    return this.profileService.createAndUpdateProfile(createProfile, updateProfile,userId, file);
+    console.log('profiel ......................', userId);
+
+    return this.profileService.createAndUpdateProfile(
+      createProfile,
+      updateProfile,
+      userId,
+      file,
+    );
   }
 
   @Put('update-profile-user')
   @ApiOperation({
-    summary:
-      'this will update the user in the profile page',
+    summary: 'this will update the user in the profile page',
   })
   @ApiResponse({
     status: 200,
@@ -72,7 +78,7 @@ export class ProfileController {
   @Roles(Role.investor, Role.campaigner)
   async updateProfileUser(
     @Req() req: RequestWithUser,
-    @Body() updateProfileUserDto: UpdateProfileUserDto
+    @Body() updateProfileUserDto: UpdateProfileUserDto,
   ) {
     const userId = req.user.id;
     return this.profileService.updateProfileUser(userId, updateProfileUserDto);
@@ -95,8 +101,6 @@ export class ProfileController {
 
     return getProfile;
   }
-
-
 
   @Get('top-header-profile')
   @ApiOperation({ summary: 'Get profile top header (Investor, Campaigner)' })
@@ -121,5 +125,27 @@ export class ProfileController {
     }
 
     return getProfileTopHeader;
+  }
+
+  // ###############################################################################
+
+  @Post('create-or-update-full-profile')
+  @ApiOperation({ summary: 'Create a new profile (Investor, Campaigner)' })
+  @ApiResponse({ status: 200, description: 'Profile created successfully' })
+  @UseInterceptors(FileInterceptor('image'))
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.investor, Role.campaigner)
+  async createUpdateProfileUser(
+    @Req() req: RequestWithUser,
+    @Body() body: UpdateProfileDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+
+    console.log('body ###########################################################', body);
+    
+    const userId = req.user.id;
+    console.log('body ', body);
+
+    return this.profileService.createUpdateProfileUser(userId, body, file);
   }
 }

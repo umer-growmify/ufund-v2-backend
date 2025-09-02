@@ -31,7 +31,6 @@ export class RegisterDto {
 
   @ApiProperty({ example: '+923001234567' })
   @IsNotEmpty()
-  @IsPhoneNumber()
   phoneNumber: string;
 
   @ApiProperty({ example: '+92' })

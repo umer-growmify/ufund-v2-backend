@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Get,
+  Param,
   Post,
   Query,
   Req,
@@ -100,11 +101,11 @@ export class AuthController {
     return this.authService.checkAuth(req.user);
   }
 
-  @Get('verify')
+  @Get('verify/:token')
   @ApiOperation({ summary: 'Verify user email using token' })
   @ApiQuery({ name: 'token', description: 'Verification token from email' })
   @ApiResponse({ status: 200, description: 'Email verified successfully' })
-  async verifyEmail(@Query('token') token: string) {
+  async verifyEmail(@Param('token') token: string) {
     return this.authService.verifyUserEmail(token);
   }
 

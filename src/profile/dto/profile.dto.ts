@@ -30,7 +30,6 @@ export class CreateProfileDto {
   })
   @IsString()
   @IsOptional()
-  @IsUrl()
   imageKey?: string;
   
   @ApiProperty({
@@ -167,6 +166,33 @@ export class CreateProfileDto {
 
 
 export class UpdateProfileDto {
+  @ApiProperty({ example: 'john@example.com' })
+  @IsEmail()
+  @IsOptional()
+  email: string;
+
+  @ApiProperty({ example: 'John' })
+  @IsString()
+  @IsOptional()
+  firstName: string;
+
+  @ApiProperty({ example: 'Doe' })
+  @IsString()
+  @IsOptional()
+  lastName: string;
+
+  @ApiPropertyOptional({ example: '+1234567890' })
+  @IsOptional()
+  @IsString()
+  phoneNumber?: string;
+
+  @ApiPropertyOptional({ example: '+1' })
+  @IsOptional()
+  @IsString()
+  countryCode?: string;
+
+  
+
   @ApiPropertyOptional({
     example: 'INDIVIDUAL',
     enum: UserAccountType,

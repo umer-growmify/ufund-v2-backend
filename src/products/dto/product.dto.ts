@@ -30,9 +30,9 @@ export class CreateProductDto {
   brand: string;
 
   @ApiProperty({ example: 100, description: 'Number of product units' })
-  @IsNumber()
+  @IsString()
   @IsNotEmpty()
-  numberOfProducts: number;
+  numberOfProducts: string;
 
   @ApiProperty({ example: '8517.12.00', description: 'HS Code of product' })
   @IsString()
@@ -55,15 +55,15 @@ export class CreateProductDto {
   categoryId: string;
 
   @ApiProperty({ example: 1000000, description: 'Total product value' })
-  @IsNumber()
+  @IsString()
   @IsNotEmpty()
-  totalValue: number;
+  totalValue: string;
 
   @ApiProperty({ example: 15, description: 'Investment profit percentage (0-100)' })
   @IsNumber()
   @Min(0)
   @Max(100)
-  @IsNotEmpty()
+  @IsNotEmpty() 
   investmentProfit: number;
 
   @ApiProperty({ example: 5, description: 'Admin commission percentage (0-100)' })

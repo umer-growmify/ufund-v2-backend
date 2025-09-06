@@ -24,6 +24,9 @@ export class FileValidationInterceptor implements NestInterceptor {
     for (const config of this.fileConfigs) {
       const files = request.files[config.fieldName] || [];
 
+      console.log(`Validating files for field: ${config.fieldName}`, files);
+      
+
       if (config.required) {
         if (!Array.isArray(files) ){
           throw new BadRequestException(

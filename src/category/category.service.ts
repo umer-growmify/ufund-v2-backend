@@ -41,6 +41,23 @@ export class CategoryService {
     }
   }
 
+  async getProductCategory() {
+    try {
+      const categories = await this.prisma.category.findMany(
+        {
+          where: { categoryType: 'PRODUCT' },
+        }
+      );
+      return {
+        success: true,
+        message: 'Categories retrieved successfully',
+        data: categories,
+      };
+    } catch (error) {
+      throw new NotFoundException('No categories found');
+    }
+  }
+
   async getCategoryById(id: string) {
     try {
       const category = await this.prisma.category.findUnique({

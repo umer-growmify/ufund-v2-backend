@@ -29,6 +29,8 @@ export class ProductsService {
     activeRole: string,
     userType: string,
   ) {
+    console.log('Create Product DTO: ', createProductDto);
+
     // Upload files to S3 and get keys
     const auditorsReport = await this.awsService.uploadFile(
       files.auditorsReport[0],
@@ -75,6 +77,10 @@ export class ProductsService {
           data: {
             ...createProductDto,
             creatorId: id,
+            offerStartDate: new Date(createProductDto.offerStartDate),
+            offerEndDate: new Date(createProductDto.offerEndDate),
+            investmentStartDate: new Date(createProductDto.investmentStartDate),
+            maturityDate: new Date(createProductDto.maturityDate),
             auditorsReportKey: auditorsReport.key,
             documentKey: document?.key,
             tokenImageKey: tokenImage.key,
@@ -108,6 +114,10 @@ export class ProductsService {
             ...createProductDto,
             campaignerId: id,
             creatorId: id,
+            offerStartDate: new Date(createProductDto.offerStartDate),
+            offerEndDate: new Date(createProductDto.offerEndDate),
+            investmentStartDate: new Date(createProductDto.investmentStartDate),
+            maturityDate: new Date(createProductDto.maturityDate),
             auditorsReportKey: auditorsReport.key,
             documentKey: document?.key,
             tokenImageKey: tokenImage.key,
@@ -174,6 +184,11 @@ export class ProductsService {
       }),
     );
 
+    const getSingleProductUrl = await this.getProductSignedUrls(products[0].id);
+    console.log('Single Product URL: ', getSingleProductUrl);
+
+    console.log('Products with URLs: ', productsWithSignedUrls);
+
     return {
       success: true,
       message: 'Products retrieved successfully',
@@ -219,7 +234,6 @@ export class ProductsService {
   findOne(id: string) {
     return `This action returns a #${id} product`;
   }
-
 
   remove(id: string) {
     return `This action removes a #${id} product`;

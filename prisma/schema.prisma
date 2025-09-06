@@ -101,13 +101,15 @@ model Products {
   id               String   @id @default(uuid())
   productName      String
   brand            String
-  numberOfProducts Int
+  numberOfProducts String
   hsCode           String
   eanCode          String
   upcCode          String
+
+
   categoryId       String
   category         Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  totalValue       Float
+  totalValue       String
   investmentProfit Float
   adminCommission  Float
   unitPrice        Float
@@ -117,12 +119,17 @@ model Products {
   creatorId        String?
   description      String
   riskScale        RiskScale
+
+
+
   offerStartDate   DateTime
   offerEndDate     DateTime
   investmentStartDate DateTime
   maturityCountDays Int
   maturityDate      DateTime
   auditorsReportKey String?
+
+
   documentKey      String?
   tokenImageKey    String?
   assetImageKey    String?
@@ -130,6 +137,8 @@ model Products {
   imageTwoKey      String?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+
+  status        Status   @default(PENDING)
 }
 
 model Asset {
@@ -217,4 +226,10 @@ enum RiskScale {
   LOW
   MEDIUM
   HIGH
+}
+enum Status {
+  PENDING
+  LIVE
+  SOLD
+  REJECTED
 }

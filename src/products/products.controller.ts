@@ -42,7 +42,7 @@ export class ProductsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(AdminRoleType.SUPER_ADMIN, RoleType.campaigner)
   @UseInterceptors(
-    new FileValidationInterceptor(productFileConfig),
+    
     FileFieldsInterceptor([
       { name: 'auditorsReport', maxCount: 1 },
       { name: 'document', maxCount: 1 },
@@ -51,6 +51,7 @@ export class ProductsController {
       { name: 'imageOne', maxCount: 1 },
       { name: 'imageTwo', maxCount: 1 },
     ]),
+    new FileValidationInterceptor(productFileConfig),
   )
   async createProduct(
     @Body() createProductDto: CreateProductDto,
@@ -65,6 +66,10 @@ export class ProductsController {
     },
     @Req() req: RequestWithUser,
   ) {
+    console.log("Request User: ", req.user);
+    console.log("Create Product DTO: ", createProductDto);
+    console.log("Files: ", files);
+    
     const activeRole = req.user.activeRole;
     const userType = req.user.type;
     const id = req.user.id;

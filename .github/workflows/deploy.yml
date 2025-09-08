@@ -20,14 +20,12 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SERVER_PASS }}
           script: |
-            # Check if project exists, pull or clone
             if [ -d ~/nest-backend/.git ]; then
               cd ~/nest-backend && git pull origin main
             else
-              git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/Hammadabbasoffc/ufund-backend.git ~/nest-backend
+              git clone git@github.com:Hammadabbasoffc/ufund-backend.git ~/nest-backend
               cd ~/nest-backend
             fi
 
-            # Run Docker (fallback to whichever version is available)
             docker compose down
             docker compose up --build -d

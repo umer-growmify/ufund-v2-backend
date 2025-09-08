@@ -43,11 +43,9 @@ export class CategoryService {
 
   async getProductCategory() {
     try {
-      const categories = await this.prisma.category.findMany(
-        {
-          where: { categoryType: 'PRODUCT' },
-        }
-      );
+      const categories = await this.prisma.category.findMany({
+        where: { categoryType: 'PRODUCT' },
+      });
       return {
         success: true,
         message: 'Categories retrieved successfully',

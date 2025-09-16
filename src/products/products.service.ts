@@ -231,9 +231,49 @@ export class ProductsService {
     };
   }
 
-  findOne(id: string) {
-    return `This action returns a #${id} product`;
+  async findOne(id: string) {
+    const product = await this.prisma.products.findUnique({
+      where: { id },
+      include: {
+        campaigner: true,
+        category: true,
+      },
+    });
+
+    if (!product) {
+      throw new NotFoundException(`Product with ID ${id} not found`);
+    }
+
+    // Generate signed URLs for each product's file keys
+    const productWithSignedUrls = {
+      ...product,
+      auditorsReportUrl: product.auditorsReportKey
+        ? await this.awsService.getSignedUrl(product.auditorsReportKey)
+        : null,
+      documentUrl: product.documentKey
+        ? await this.awsService.getSignedUrl(product.documentKey)
+        : null,
+      tokenImageUrl: product.tokenImageKey
+        ? await this.awsService.getSignedUrl(product.tokenImageKey)
+        : null,
+      assetImageUrl: product.assetImageKey
+        ? await this.awsService.getSignedUrl(product.assetImageKey)
+        : null,
+      imageOneUrl: product.imageOneKey
+        ? await this.awsService.getSignedUrl(product.imageOneKey)
+        : null,
+      imageTwoUrl: product.imageTwoKey
+        ? await this.awsService.getSignedUrl(product.imageTwoKey)
+        : null,
+    };
+
+    return {
+      success: true,
+      message: 'Product retrieved successfully',
+      data: productWithSignedUrls,
+    };
   }
+
 
   remove(id: string) {
     return `This action removes a #${id} product`;

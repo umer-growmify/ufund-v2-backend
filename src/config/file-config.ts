@@ -48,3 +48,13 @@ export const prfileFileConfig: FileTypeConfig[] = [
     maxSize: 5 * 1024 * 1024,
   },
 ];
+
+export const categoryFileConfig: FileTypeConfig[] = [
+  {
+    fieldName: 'image',
+    required: false,
+    allowedMimeTypes: ['image/jpeg', 'image/png','image/jpg'],
+    maxSize: 5 * 1024 * 1024,
+  },
+];
+

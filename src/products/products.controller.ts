@@ -7,10 +7,11 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFiles,
+  Param,
 } from '@nestjs/common';
 import { AdminRoleType, RoleType } from '@prisma/client';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import {  RolesGuard } from 'src/auth/guards/roles.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { RequestWithUser } from 'src/types/types';
 import { CreateProductDto } from './dto/product.dto';
 import { ProductsService } from './products.service';
@@ -21,9 +22,7 @@ import {
   ApiTags,
   ApiConsumes,
 } from '@nestjs/swagger';
-import {
-  FileFieldsInterceptor,
-} from '@nestjs/platform-express';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { productFileConfig } from 'src/config/file-config';
 import { FileValidationInterceptor } from 'src/utils/file-validation.interceptor';
 import { Roles } from 'src/auth/guards/roles.decorator';
@@ -37,12 +36,15 @@ export class ProductsController {
   @Post('create')
   @ApiOperation({ summary: 'Create a product (Campaigner or SUPER_ADMIN)' })
   @ApiResponse({ status: 201, description: 'Product created successfully' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Only campaigner or SUPER_ADMIN can create product' })
+  @ApiResponse({
+    status: 403,
+    description:
+      'Forbidden - Only campaigner or SUPER_ADMIN can create product',
+  })
   @ApiConsumes('multipart/form-data')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(AdminRoleType.SUPER_ADMIN, RoleType.campaigner)
   @UseInterceptors(
-    
     FileFieldsInterceptor([
       { name: 'auditorsReport', maxCount: 1 },
       { name: 'document', maxCount: 1 },
@@ -66,10 +68,10 @@ export class ProductsController {
     },
     @Req() req: RequestWithUser,
   ) {
-    console.log("Request User: ", req.user);
-    console.log("Create Product DTO: ", createProductDto);
-    console.log("Files: ", files);
-    
+    console.log('Request User: ', req.user);
+    console.log('Create Product DTO: ', createProductDto);
+    console.log('Files: ', files);
+
     const activeRole = req.user.activeRole;
     const userType = req.user.type;
     const id = req.user.id;
@@ -83,11 +85,26 @@ export class ProductsController {
   }
 
   @Get('allproducts')
-  @ApiOperation({ summary: 'Get all products (Investor, Campaigner, SUPER_ADMIN)' })
+  @ApiOperation({
+    summary: 'Get all products (Investor, Campaigner, SUPER_ADMIN)',
+  })
   @ApiResponse({ status: 200, description: 'List of all products returned' })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(AdminRoleType.SUPER_ADMIN, RoleType.campaigner, RoleType.investor)
   getAllProducts() {
     return this.productsService.getAllProducts();
   }
+
+  // products.controller.ts
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get a single product by ID' })
+  @ApiResponse({ status: 200, description: 'Product returned successfully' })
+  @ApiResponse({ status: 404, description: 'Product not found' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(AdminRoleType.SUPER_ADMIN, RoleType.campaigner, RoleType.investor)
+  getProductById(@Param('id') id: string) {
+    return this.productsService.findOne(id);
+  }
+
 }

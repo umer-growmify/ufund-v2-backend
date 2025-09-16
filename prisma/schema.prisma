@@ -111,9 +111,9 @@ model Products {
   category         Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   totalValue       String
   investmentProfit Float
-  adminCommission  Float
-  unitPrice        Float
-  productTotalValue Float
+  adminCommission  Float?
+  unitPrice        String?
+  productTotalValue Float?
   campaignerId     String?
   campaigner       User?    @relation(fields: [campaignerId], references: [id], onDelete: Cascade)
   creatorId        String?

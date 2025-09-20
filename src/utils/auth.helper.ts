@@ -83,7 +83,7 @@ export class AuthHelperService {
     const { accessToken, refreshToken, cookieName = 'accessToken' } = tokens;
 
     res.cookie(cookieName, accessToken, {
-      httpOnly: true,
+      httpOnly: false,
       secure: this.configService.get('NODE_ENV') === 'production',
       sameSite: 'strict',
       maxAge: 15 * 60 * 1000, // 15 minutes

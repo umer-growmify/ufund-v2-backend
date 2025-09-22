@@ -47,8 +47,7 @@ export class CategoryService {
     }
   }
 
-
-    async getAllProductCategories() {
+  async getAllProductCategories() {
     try {
       const categories = await this.prisma.category.findMany({
         where: { categoryType: 'PRODUCT' },
@@ -61,7 +60,7 @@ export class CategoryService {
       // Get the current date and calculate the start of the month
       const now = new Date();
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-      
+
       // Get product counts for each category
       const categoriesWithCounts = await Promise.all(
         categories.map(async (category) => {
@@ -69,17 +68,17 @@ export class CategoryService {
           const totalProducts = await this.prisma.products.count({
             where: { categoryId: category.id },
           });
-          
+
           // Get products created this month in this category
           const monthlyProducts = await this.prisma.products.count({
-            where: { 
+            where: {
               categoryId: category.id,
               createdAt: {
                 gte: startOfMonth,
               },
             },
           });
-          
+
           let imageUrl = category.imageUrl;
 
           // Check if the imageUrl is an S3 key (not a full URL)
@@ -122,5 +121,77 @@ export class CategoryService {
     }
   }
 
+  async getAllTokenCategories() {
+    try {
+      const categories = await this.prisma.category.findMany({
+        where: { categoryType: 'TOKEN' },
+      });
 
+      if (!categories || categories.length === 0) {
+        throw new NotFoundException('No categories found');
+      }
+
+      // Get the current date and calculate the start of the month
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+      // Get product counts for each category
+      const categoriesWithCounts = await Promise.all(
+        categories.map(async (category) => {
+          // Get total products in this category
+          const totalProducts = await this.prisma.products.count({
+            where: { categoryId: category.id },
+          });
+
+          // Get products created this month in this category
+          const monthlyProducts = await this.prisma.products.count({
+            where: {
+              categoryId: category.id,
+              createdAt: {
+                gte: startOfMonth,
+              },
+            },
+          });
+
+          let imageUrl = category.imageUrl;
+
+          // Check if the imageUrl is an S3 key (not a full URL)
+          if (
+            imageUrl &&
+            !imageUrl.startsWith('http') &&
+            !imageUrl.startsWith('https')
+          ) {
+            try {
+              imageUrl = await this.awsService.getSignedUrl(category.imageUrl);
+            } catch (error) {
+              console.error(
+                `Error generating signed URL for category ${category.id}:`,
+                error,
+              );
+              // Keep the original imageUrl if signed URL generation fails
+            }
+          }
+
+          return {
+            ...category,
+            imageUrl,
+            totalProducts,
+            monthlyProducts,
+          };
+        }),
+      );
+
+      return {
+        success: true,
+        message: 'Categories retrieved successfully',
+        data: categoriesWithCounts,
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      console.error('Error fetching categories:', error);
+      throw new BadRequestException('Failed to retrieve categories');
+    }
+  }
 }

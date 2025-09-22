@@ -57,8 +57,16 @@ export class CategoryController {
   @ApiResponse({ status: 200, description: 'List of all categories returned' })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(AdminRoleType.SUPER_ADMIN, RoleType.campaigner)
-  async getAllCategories() {
+  async getAllProductCategories() {
     return this.categoryService.getAllProductCategories();
   }
 
+  @Get('get-all-token-category')
+  @ApiOperation({ summary: 'Get all categories (SUPER_ADMIN and Campaigner)' })
+  @ApiResponse({ status: 200, description: 'List of all categories returned' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(AdminRoleType.SUPER_ADMIN, RoleType.campaigner)
+  async getAllTokenCategories() {
+    return this.categoryService.getAllTokenCategories();
+  }
 }

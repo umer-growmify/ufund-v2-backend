@@ -73,48 +73,21 @@ export class ProductsService {
         if (!campaignerExists.roles.includes('campaigner'))
           throw new BadRequestException('User is not a campaigner');
 
-        // Prepare data without campaignerId for admin case
-        const productData: any = {
-          productName: createProductDto.productName,
-          brand: createProductDto.brand,
-          numberOfProducts: createProductDto.numberOfProducts,
-          hsCode: createProductDto.hsCode,
-          eanCode: createProductDto.eanCode,
-          upcCode: createProductDto.upcCode,
-          totalValue: createProductDto.totalValue,
-          investmentProfit: createProductDto.investmentProfit,
-          description: createProductDto.description,
-          riskScale: createProductDto.riskScale,
-          maturityCountDays: createProductDto.maturityCountDays,
-          category: {
-            connect: {
-              id: createProductDto.categoryId,
-            },
-          },
-          creator: {
-            connect: {
-              id: id,
-            },
-          },
-          campaigner: {
-            connect: {
-              id: createProductDto.campaignerId,
-            },
-          },
-          offerStartDate: new Date(createProductDto.offerStartDate),
-          offerEndDate: new Date(createProductDto.offerEndDate),
-          investmentStartDate: new Date(createProductDto.investmentStartDate),
-          maturityDate: new Date(createProductDto.maturityDate),
-          auditorsReportKey: auditorsReport.key,
-          documentKey: document?.key,
-          tokenImageKey: tokenImage.key,
-          assetImageKey: assetImage.key,
-          imageOneKey: imageOne?.key,
-          imageTwoKey: imageTwo?.key,
-        };
-
         const createProduct = await this.prisma.products.create({
-          data: productData,
+          data: {
+            ...createProductDto,
+            creatorId: id,
+            offerStartDate: new Date(createProductDto.offerStartDate),
+            offerEndDate: new Date(createProductDto.offerEndDate),
+            investmentStartDate: new Date(createProductDto.investmentStartDate),
+            maturityDate: new Date(createProductDto.maturityDate),
+            auditorsReportKey: auditorsReport.key,
+            documentKey: document?.key,
+            tokenImageKey: tokenImage.key,
+            assetImageKey: assetImage.key,
+            imageOneKey: imageOne?.key,
+            imageTwoKey: imageTwo?.key,
+          },
         });
 
         return {
@@ -136,55 +109,22 @@ export class ProductsService {
       }
     } else if (activeRole === 'campaigner') {
       try {
-        // Prepare data for campaigner case
-        const productData: any = {
-          productName: createProductDto.productName,
-          brand: createProductDto.brand,
-          numberOfProducts: createProductDto.numberOfProducts,
-          hsCode: createProductDto.hsCode,
-          eanCode: createProductDto.eanCode,
-          upcCode: createProductDto.upcCode,
-          totalValue: createProductDto.totalValue,
-          investmentProfit: createProductDto.investmentProfit,
-          description: createProductDto.description,
-          riskScale: createProductDto.riskScale,
-          maturityCountDays: createProductDto.maturityCountDays,
-          category: {
-            connect: {
-              id: createProductDto.categoryId,
-            },
-          },
-          creator: {
-            connect: {
-              id: id,
-            },
-          },
-          campaigner: {
-            connect: {
-              id: id,
-            },
-          },
-          adminCommission: createProductDto.adminCommission
-            ? Number(createProductDto.adminCommission)
-            : null,
-          unitPrice: createProductDto.unitPrice || null,
-          productTotalValue: createProductDto.productTotalValue
-            ? Number(createProductDto.productTotalValue)
-            : null,
-          offerStartDate: new Date(createProductDto.offerStartDate),
-          offerEndDate: new Date(createProductDto.offerEndDate),
-          investmentStartDate: new Date(createProductDto.investmentStartDate),
-          maturityDate: new Date(createProductDto.maturityDate),
-          auditorsReportKey: auditorsReport.key,
-          documentKey: document?.key,
-          tokenImageKey: tokenImage.key,
-          assetImageKey: assetImage.key,
-          imageOneKey: imageOne?.key,
-          imageTwoKey: imageTwo?.key,
-        };
-
         const createProduct = await this.prisma.products.create({
-          data: productData,
+          data: {
+            ...createProductDto,
+            campaignerId: id,
+            creatorId: id,
+            offerStartDate: new Date(createProductDto.offerStartDate),
+            offerEndDate: new Date(createProductDto.offerEndDate),
+            investmentStartDate: new Date(createProductDto.investmentStartDate),
+            maturityDate: new Date(createProductDto.maturityDate),
+            auditorsReportKey: auditorsReport.key,
+            documentKey: document?.key,
+            tokenImageKey: tokenImage.key,
+            assetImageKey: assetImage.key,
+            imageOneKey: imageOne?.key,
+            imageTwoKey: imageTwo?.key,
+          },
         });
 
         return {
@@ -244,12 +184,8 @@ export class ProductsService {
       }),
     );
 
-    if (products.length > 0) {
-      const getSingleProductUrl = await this.getProductSignedUrls(
-        products[0].id,
-      );
-      console.log('Single Product URL: ', getSingleProductUrl);
-    }
+    const getSingleProductUrl = await this.getProductSignedUrls(products[0].id);
+    console.log('Single Product URL: ', getSingleProductUrl);
 
     console.log('Products with URLs: ', productsWithSignedUrls);
 

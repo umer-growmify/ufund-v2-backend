@@ -114,9 +114,13 @@ export class ProductsService {
             ...createProductDto,
             campaignerId: id,
             creatorId: id,
-            adminCommission: createProductDto.adminCommission || null, // Handle undefined
+            adminCommission: createProductDto.adminCommission
+              ? Number(createProductDto.adminCommission)
+              : null,
             unitPrice: createProductDto.unitPrice || null,
-            productTotalValue: createProductDto.productTotalValue || null,
+            productTotalValue: createProductDto.productTotalValue
+              ? Number(createProductDto.productTotalValue)
+              : null,
             offerStartDate: new Date(createProductDto.offerStartDate),
             offerEndDate: new Date(createProductDto.offerEndDate),
             investmentStartDate: new Date(createProductDto.investmentStartDate),

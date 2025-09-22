@@ -8,11 +8,18 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.use(cookieParser());
+
+  // ✅ Handle multiple origins (local + env)
+  const allowedOrigins = [
+    'http://localhost:3000',
+    process.env.CORS_ORIGIN,
+  ].filter(Boolean); // removes undefined if env not set
+
   app.enableCors({
-    origin: process.env.CORS_ORIGIN || '*', // Use '*' for all origins or specify your allowed origin
+    origin: allowedOrigins,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
-    allowedHeaders: 'Content-Type, Accept, Authorization',
+    allowedHeaders: ['Content-Type', 'Accept', 'Authorization'],
   });
 
   app.setGlobalPrefix('api');
@@ -24,7 +31,7 @@ async function bootstrap() {
 
   app.useGlobalPipes(
     new ValidationPipe({
-      transform: true, // Automatically transform payloads to DTO types
+      transform: true,
       transformOptions: { enableImplicitConversion: true },
     }),
   );
@@ -35,7 +42,7 @@ async function bootstrap() {
     .setDescription('API documentation for Ufund project')
     .setVersion('1.0')
     .addTag('Ufund')
-    .addBearerAuth() // If you're using JWT, otherwise remove
+    .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
@@ -47,6 +54,7 @@ async function bootstrap() {
   await app.listen(port, () => {
     console.log(`Application is running on: http://localhost:${port}`);
     console.log(`Swagger Docs: http://localhost:${port}/api-docs`);
+    console.log(`CORS allowed origins:`, allowedOrigins);
   });
 }
 bootstrap();

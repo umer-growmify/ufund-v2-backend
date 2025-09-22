@@ -114,6 +114,9 @@ export class ProductsService {
             ...createProductDto,
             campaignerId: id,
             creatorId: id,
+            adminCommission: createProductDto.adminCommission || null, // Handle undefined
+            unitPrice: createProductDto.unitPrice || null,
+            productTotalValue: createProductDto.productTotalValue || null,
             offerStartDate: new Date(createProductDto.offerStartDate),
             offerEndDate: new Date(createProductDto.offerEndDate),
             investmentStartDate: new Date(createProductDto.investmentStartDate),
@@ -273,7 +276,6 @@ export class ProductsService {
       data: productWithSignedUrls,
     };
   }
-
 
   remove(id: string) {
     return `This action removes a #${id} product`;

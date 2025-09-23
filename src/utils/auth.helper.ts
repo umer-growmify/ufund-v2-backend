@@ -84,8 +84,8 @@ export class AuthHelperService {
 
     res.cookie(cookieName, accessToken, {
       httpOnly: false,
-      secure: this.configService.get('NODE_ENV') === 'production',
-      sameSite: 'none',
+      secure: true,
+      sameSite: 'lax',
       maxAge: 15 * 60 * 1000, // 15 minutes
     });
 
@@ -95,7 +95,7 @@ export class AuthHelperService {
     );
     const refreshTokenExpiry = refreshTokenExpiryStr
       ? parseInt(refreshTokenExpiryStr, 10)
-      : defaultExpiry; 
+      : defaultExpiry;
 
     console.log('Setting cookie: refreshToken', {
       value: refreshToken,
@@ -104,8 +104,8 @@ export class AuthHelperService {
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      secure: this.configService.get('NODE_ENV') === 'production',
-      sameSite: 'none',
+      secure: true,
+      sameSite: 'lax',
       maxAge: rememberMe ? refreshTokenExpiry : 24 * 60 * 60 * 1000,
     });
 
@@ -113,7 +113,7 @@ export class AuthHelperService {
       success: true,
       message: 'Login successful',
       user: {
-        id: entity.id, 
+        id: entity.id,
         email: entity.email,
         name: entity.name,
         roles: entity.roles,

@@ -84,8 +84,8 @@ export class AuthHelperService {
 
     res.cookie(cookieName, accessToken, {
       httpOnly: false,
-      secure: false,
-      sameSite: 'none',
+      secure: true,
+      sameSite: 'strict',
       maxAge: 15 * 60 * 1000, // 15 minutes
     });
 
@@ -104,8 +104,8 @@ export class AuthHelperService {
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      secure: false,
-      sameSite: 'none',
+      secure: true,
+      sameSite: 'strict',
       maxAge: rememberMe ? refreshTokenExpiry : 24 * 60 * 60 * 1000,
     });
 

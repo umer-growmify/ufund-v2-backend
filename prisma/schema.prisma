@@ -73,7 +73,7 @@ model Admin {
 model Category {
   id           String       @id @default(uuid())
   name         String       @unique
-  imageUrl     String
+  imageUrl     String?
   categoryType CategoryType
   product      Products[]
   assets       Asset[]
@@ -138,23 +138,23 @@ model Products {
 }
 
 model Asset {
-  id                String    @id @default(uuid())
-  assetName         String
-  tokenName         String
-  tokenValue        String
-  tokenSymbol       String
-  tokenSupply       String
-  decimal           Int
-  auditorsName      String
-  adminCommission   Float
-  assetValue        Float
-  categoryId        String
-  category          Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  assetTypeId       String
-  assetType         AssetType @relation(fields: [assetTypeId], references: [id], onDelete: Cascade)
-  tokenTypeId       String
-  tokenType         TokenType @relation(fields: [tokenTypeId], references: [id], onDelete: Cascade)
-  
+  id              String    @id @default(uuid())
+  assetName       String
+  tokenName       String
+  tokenValue      String
+  tokenSymbol     String
+  tokenSupply     String
+  decimal         Int
+  auditorsName    String
+  adminCommission Float
+  assetValue      Float
+  categoryId      String
+  category        Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  assetTypeId     String
+  assetType       AssetType @relation(fields: [assetTypeId], references: [id], onDelete: Cascade)
+  tokenTypeId     String
+  tokenType       TokenType @relation(fields: [tokenTypeId], references: [id], onDelete: Cascade)
+
   userId            String?
   user              User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
   creatorId         String?

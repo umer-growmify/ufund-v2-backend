@@ -19,6 +19,7 @@ async function bootstrap() {
     origin: allowedOrigins,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
+    sameSite: 'none',
     allowedHeaders: ['Content-Type', 'Accept', 'Authorization'],
   });
 

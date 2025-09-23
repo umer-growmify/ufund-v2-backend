@@ -154,6 +154,7 @@ model Asset {
   assetType         AssetType @relation(fields: [assetTypeId], references: [id], onDelete: Cascade)
   tokenTypeId       String
   tokenType         TokenType @relation(fields: [tokenTypeId], references: [id], onDelete: Cascade)
+  
   userId            String?
   user              User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
   creatorId         String?

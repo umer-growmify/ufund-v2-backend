@@ -88,7 +88,9 @@ export class CategoryService {
             !imageUrl.startsWith('https')
           ) {
             try {
-              imageUrl = await this.awsService.getSignedUrl(category.imageUrl);
+              imageUrl = await this.awsService.getSignedUrl(
+                category.imageUrl as string,
+              );
             } catch (error) {
               console.error(
                 `Error generating signed URL for category ${category.id}:`,
@@ -162,7 +164,9 @@ export class CategoryService {
             !imageUrl.startsWith('https')
           ) {
             try {
-              imageUrl = await this.awsService.getSignedUrl(category.imageUrl);
+              imageUrl = await this.awsService.getSignedUrl(
+                category.imageUrl as string,
+              );
             } catch (error) {
               console.error(
                 `Error generating signed URL for category ${category.id}:`,

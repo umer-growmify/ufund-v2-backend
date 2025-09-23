@@ -23,11 +23,7 @@ import { Throttle } from '@nestjs/throttler';
 import { RoleType } from '@prisma/client';
 import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
-import {
-  AdminLoginDto,
-  LoginDto,
-  RegisterDto
-} from './dto/auth.dto';
+import { AdminLoginDto, LoginDto, RegisterDto } from './dto/auth.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 
@@ -95,7 +91,7 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Returns current user data' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async checkAuth(@Req() req: Request) {
-    // console.log(req);
+    console.log('checking auth status...', req);
 
     console.log('Checking auth for user:');
     return this.authService.checkAuth(req.user);
@@ -118,15 +114,15 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const refreshToken = req?.cookies?.refreshToken;
+    console.log('Refreshing token...', req);
 
+    const refreshToken = req?.cookies?.refreshToken;
 
     if (!refreshToken) {
       console.log('No refresh token found in cookies');
     }
 
     return this.authService.refreshToken(refreshToken, res);
-
   }
 
   @Get('google')

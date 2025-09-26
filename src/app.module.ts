@@ -9,6 +9,7 @@ import { CategoryModule } from './category/category.module';
 import { ProductsModule } from './products/products.module';
 import { AssetModule } from './asset/asset.module';
 import { AwsModule } from './aws/aws.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { AwsModule } from './aws/aws.module';
     ProductsModule,
     AssetModule,
     AwsModule,
+    UserModule,
   ],
   controllers: [AppController],
   providers: [AppService],

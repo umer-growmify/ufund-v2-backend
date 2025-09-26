@@ -155,19 +155,28 @@ model Asset {
   tokenTypeId     String
   tokenType       TokenType @relation(fields: [tokenTypeId], references: [id], onDelete: Cascade)
 
-  userId            String?
-  user              User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  creatorId         String?
-  offerStartDate    DateTime
-  offerEndDate      DateTime
-  rewardDate        DateTime?
-  rewardDescription String?
-  riskScale         RiskScale
-  auditorsReportUrl String
-  tokenImageUrl     String
-  assetImageUrl     String
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  userId    String?
+  user      User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  creatorId String?
+
+  network          String?
+  contractTemplate String?
+
+  offerStartDate DateTime
+  offerEndDate   DateTime
+  rewardDate     DateTime?
+  reward         String?
+  description    String?
+  riskScale      RiskScale
+
+  documentKey       String?
+  auditorsReportKey String?
+  productImageKey   String?
+  assetImageKey     String?
+  imageOneKey       String?
+  imageTwoKey       String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }
 
 model RefreshToken {

@@ -97,6 +97,19 @@ export class AuthController {
     return this.authService.checkAuth(req.user);
   }
 
+  @Get('check-admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Check authentication status' })
+  @ApiResponse({ status: 200, description: 'Returns current user data' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async checkAuthAdmin(@Req() req: Request) {
+    console.log('checking auth status...', req);
+
+    console.log('Checking auth for user:');
+    return this.authService.checkAuthAdmin(req.user);
+  }
+
   @Get('verify/:token')
   @ApiOperation({ summary: 'Verify user email using token' })
   @ApiQuery({ name: 'token', description: 'Verification token from email' })

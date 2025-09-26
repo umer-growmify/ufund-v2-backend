@@ -137,7 +137,6 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({ where: { email } });
 
     console.log('User:', user);
-    
 
     if (!user || !user.isVerified || !user.password) {
       throw new UnauthorizedException(
@@ -149,7 +148,6 @@ export class AuthService {
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
-    
 
     if (!user.roles.includes(activeRole)) {
       await this.prisma.user.update({
@@ -158,13 +156,11 @@ export class AuthService {
       });
     }
 
-    
-
     const { accessToken, refreshToken } = await this.generateTokens(
       user,
-      activeRole, 
+      activeRole,
     );
-    
+
     await this.prisma.refreshToken.create({
       data: {
         token: refreshToken,
@@ -336,7 +332,6 @@ export class AuthService {
       activeRole,
     );
 
-    
     this.authHelper.generateTokenAndSetCookie(newUser, res, true, activeRole, {
       accessToken,
       refreshToken,
@@ -388,7 +383,6 @@ export class AuthService {
     }
 
     console.log('User:', user);
-    
 
     const userData = await this.prisma.user.findUnique({
       where: { id: user.id },
@@ -415,6 +409,27 @@ export class AuthService {
         ...userData,
         activeRole: user.activeRole,
       },
+    };
+  }
+
+  async checkAuthAdmin(user: any) {
+    if (!user || !user.id) {
+      throw new UnauthorizedException('User not authenticated');
+    }
+
+    console.log('User:', user);
+
+    const userData = await this.prisma.admin.findUnique({
+      where: { id: user.id },
+    });
+
+    if (!userData) {
+      throw new NotFoundException('User not found');
+    }
+
+    return {
+      success: true,
+      user,
     };
   }
 
@@ -549,7 +564,6 @@ export class AuthService {
       role: activeRole,
       type: entity.role ? 'admin' : 'user',
     };
-
 
     const accessTokenEx = this.configService.get<number>(
       'ACCESS_TOKEN_EXPIRY',

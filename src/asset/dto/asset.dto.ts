@@ -1,173 +1,123 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { RiskScale } from '@prisma/client';
 import {
-  IsString,
+  IsDateString,
+  IsEnum,
+  IsInt,
   IsNotEmpty,
-  IsUUID,
   IsNumber,
   IsOptional,
-  IsEnum,
-  IsDateString,
-  IsUrl,
-  Min,
+  IsString,
+  IsUUID,
   Max,
-  IsInt,
+  Min,
 } from 'class-validator';
-import { RiskScale } from '@prisma/client';
 
 export class CreateAssetDto {
-  @ApiProperty({
-    example: 'Gold Investment Asset',
-    description: 'Name of the asset',
-  })
+  @ApiProperty({ example: 'Gold Investment Asset' })
   @IsString()
   @IsNotEmpty()
   assetName: string;
 
-  @ApiProperty({
-    example: 'GoldToken',
-    description: 'Name of the token associated with asset',
-  })
+  @ApiProperty({ example: 'GoldToken' })
   @IsString()
   @IsNotEmpty()
   tokenName: string;
 
-  @ApiProperty({
-    example: '1000000',
-    description: 'Total token value in numbers as string',
-  })
+  @ApiProperty({ example: '1000000' })
   @IsString()
   @IsNotEmpty()
   tokenValue: string;
 
-  @ApiProperty({ example: 'GLD', description: 'Token symbol' })
+  @ApiProperty({ example: 'GLD' })
   @IsString()
   @IsNotEmpty()
   tokenSymbol: string;
 
-  @ApiProperty({
-    example: '1000000',
-    description: 'Total token supply in numbers as string',
-  })
+  @ApiProperty({ example: '1000000' })
   @IsString()
   @IsNotEmpty()
   tokenSupply: string;
 
-  @ApiProperty({ example: 18, description: 'Decimal precision for token' })
+  @ApiProperty({ example: 18 })
   @IsInt()
   @IsNotEmpty()
   decimal: number;
 
-  @ApiProperty({
-    example: 'KPMG Auditors',
-    description: 'Name of the auditing company',
-  })
+  @ApiProperty({ example: 'KPMG Auditors' })
   @IsString()
   @IsNotEmpty()
   auditorsName: string;
 
-  @ApiProperty({ example: 5, description: 'Admin commission in percentage' })
+  @ApiProperty({ example: 5 })
   @IsNumber()
   @Min(0)
   @Max(100)
   adminCommission: number;
 
-  @ApiProperty({
-    example: 1000000,
-    description: 'Total asset value in numbers',
-  })
+  @ApiProperty({ example: 1000000 })
   @IsNumber()
   assetValue: number;
 
-  @ApiProperty({
-    example: 'category-uuid-id',
-    description: 'UUID of the category',
-  })
+  @ApiProperty({ example: 'category-uuid-id' })
   @IsUUID()
   categoryId: string;
 
-  @ApiProperty({
-    example: 'asset-type-uuid-id',
-    description: 'UUID of the asset type',
-  })
+  @ApiProperty({ example: 'asset-type-uuid-id' })
   @IsUUID()
   assetTypeId: string;
 
-  @ApiProperty({
-    example: 'token-type-uuid-id',
-    description: 'UUID of the token type',
-  })
+  @ApiProperty({ example: 'token-type-uuid-id' })
   @IsUUID()
   tokenTypeId: string;
 
-  @ApiProperty({
-    example: 'creator ID',
-    description: 'Id of the creator who can create this',
-  })
+  @ApiProperty({ example: 'user-uuid-id', required: false })
+  @IsOptional()
   @IsUUID()
-  creatorId: string;
+  userId?: string;
 
-  @ApiProperty({
-    example: '2025-08-01',
-    description: 'Offer start date in YYYY-MM-DD format',
-  })
+  @ApiProperty({ example: 'creator-uuid-id', required: false })
+  @IsOptional()
+  @IsUUID()
+  creatorId?: string;
+
+  @ApiProperty({ example: 'Ethereum', required: false })
+  @IsOptional()
+  @IsString()
+  network?: string;
+
+  @ApiProperty({ example: 'ERC20Template', required: false })
+  @IsOptional()
+  @IsString()
+  contractTemplate?: string;
+
+  @ApiProperty({ example: '2025-08-01' })
   @IsDateString()
   offerStartDate: string;
 
-  @ApiProperty({
-    example: '2025-09-01',
-    description: 'Offer end date in YYYY-MM-DD format',
-  })
+  @ApiProperty({ example: '2025-09-01' })
   @IsDateString()
   offerEndDate: string;
 
-  @ApiProperty({
-    example: '2025-12-01',
-    description: 'Reward date (optional)',
-    required: false,
-  })
+  @ApiProperty({ example: '2025-12-01', required: false })
   @IsOptional()
   @IsDateString()
   rewardDate?: string;
 
-  @ApiProperty({
-    example: 'Annual profit reward',
-    description: 'Description of reward (optional)',
-    required: false,
-  })
+  @ApiProperty({ example: 'Annual profit reward', required: false })
   @IsOptional()
   @IsString()
-  rewardDescription?: string;
+  reward?: string;
 
-  @ApiProperty({
-    example: 'MEDIUM',
-    enum: RiskScale,
-    description: 'Risk scale classification',
-  })
+  @ApiProperty({ example: 'Description of the asset', required: false })
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @ApiProperty({ example: 'MEDIUM', enum: RiskScale })
   @IsEnum(RiskScale)
   riskScale: RiskScale;
-
-  @ApiProperty({
-    example: 'https://example.com/audit-report.pdf',
-    description: 'URL for auditors report',
-  })
-  @IsUrl()
-  auditorsReportUrl: string;
-
-  @ApiProperty({
-    example: 'https://example.com/token-image.png',
-    description: 'Token image URL',
-  })
-  @IsUrl()
-  tokenImageUrl: string;
-
-  @ApiProperty({
-    example: 'https://example.com/asset-image.png',
-    description: 'Asset image URL',
-  })
-  @IsUrl()
-  assetImageUrl: string;
 }
-
 export class CreateAssetTypeDto {
   @ApiProperty({
     example: 'Write type of the asset',

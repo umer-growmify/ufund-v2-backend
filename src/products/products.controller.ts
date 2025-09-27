@@ -183,13 +183,13 @@ export class ProductsController {
     );
   }
 
-  @Get(':id')
+  @Get('get-product-by-id/:id')
   @ApiOperation({ summary: 'Get a single product by ID' })
   @ApiResponse({ status: 200, description: 'Product returned successfully' })
   @ApiResponse({ status: 404, description: 'Product not found' })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(AdminRoleType.SUPER_ADMIN, RoleType.campaigner, RoleType.investor)
   getProductById(@Param('id') id: string) {
-    return this.productsService.findOne(id);
+    return this.productsService.getProductById(id);
   }
 }

@@ -34,7 +34,6 @@ export class CreateCategoryDto {
 export class UpdateCategoryDto {
   @ApiProperty({ example: 'Electronics', description: 'Name of the category' })
   @IsString()
-  @IsNotEmpty()
   @IsOptional()
   name: string;
 

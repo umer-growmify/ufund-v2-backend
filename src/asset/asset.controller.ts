@@ -298,4 +298,28 @@ export class AssetController {
   async deleteAsset(@Param('id') assetId: string, @Req() req: RequestWithUser) {
     return this.assetService.deleteAsset(assetId);
   }
+
+  // get assettype by id
+  @Get('get-asset-type-by-id/:id')
+  @ApiOperation({ summary: 'Get asset type by id' })
+  @ApiResponse({ status: 200, description: 'Asset type fetched successfully' })
+  async getAssetTypeById(@Param('id') id: string) {
+    return this.assetService.assetTypeById(id);
+  }
+
+  // get token type by id
+  @Get('get-token-type-by-id/:id')
+  @ApiOperation({ summary: 'Get token type by id' })
+  @ApiResponse({ status: 200, description: 'Token type fetched successfully' })
+  async getTokenTypeById(@Param('id') id: string) {
+    return this.assetService.tokenTypeById(id);
+  }
+
+  // get asset by id
+  @Get('get-asset-by-id/:id')
+  @ApiOperation({ summary: 'Get asset by id' })
+  @ApiResponse({ status: 200, description: 'Asset fetched successfully' })
+  async getAssetById(@Param('id') id: string) {
+    return this.assetService.assetTypeById(id);
+  }
 }

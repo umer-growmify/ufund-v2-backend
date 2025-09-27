@@ -478,7 +478,7 @@ export class ProductsService {
     }
   }
 
-  async findOne(id: string) {
+  async getProductById(id: string) {
     const product = await this.prisma.products.findUnique({
       where: { id },
       include: {

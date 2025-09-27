@@ -295,6 +295,34 @@ export class AssetService {
     }
   }
 
+  async assetTypeById(id: string) {
+    const assetType = await this.prisma.assetType.findUnique({
+      where: { id },
+    });
+    if (!assetType) {
+      throw new NotFoundException('Asset Type not found');
+    }
+    return {
+      success: true,
+      message: 'Asset Type retrieved successfully',
+      data: assetType,
+    };
+  }
+
+  async tokenTypeById(id: string) {
+    const tokenType = await this.prisma.tokenType.findUnique({
+      where: { id },
+    });
+    if (!tokenType) {
+      throw new NotFoundException('Token Type not found');
+    }
+    return {
+      success: true,
+      message: 'Token Type retrieved successfully',
+      data: tokenType,
+    };
+  }
+
   async editAssetType(id: string, name: string) {
     try {
       const assetType = await this.prisma.assetType.update({
@@ -692,6 +720,57 @@ export class AssetService {
     } catch (error) {
       console.error('Error deleting asset:', error);
       throw new BadRequestException(error.message || 'Failed to delete asset');
+    }
+  }
+
+  async getAssetById(assetId: string) {
+    try {
+      const asset = await this.prisma.asset.findUnique({
+        where: { id: assetId },
+        include: {
+          category: true,
+          assetType: true,
+          tokenType: true,
+          user: true,
+        },
+      });
+
+      if (!asset) {
+        throw new NotFoundException(`Asset with ID ${assetId} not found`);
+      }
+      const assetWithSignedUrls = {
+        ...asset,
+        auditorsReportUrl: asset.auditorsReportKey
+          ? await this.awsService.getSignedUrl(asset.auditorsReportKey)
+          : null,
+        documentUrl: asset.documentKey
+          ? await this.awsService.getSignedUrl(asset.documentKey)
+          : null,
+        productImageUrl: asset.productImageKey
+          ? await this.awsService.getSignedUrl(asset.productImageKey)
+          : null,
+        assetImageUrl: asset.assetImageKey
+          ? await this.awsService.getSignedUrl(asset.assetImageKey)
+          : null,
+        imageOneUrl: asset.imageOneKey
+          ? await this.awsService.getSignedUrl(asset.imageOneKey)
+          : null,
+        imageTwoUrl: asset.imageTwoKey
+          ? await this.awsService.getSignedUrl(asset.imageTwoKey)
+          : null,
+      };
+
+      return {
+        success: true,
+        message: 'Asset retrieved successfully',
+        data: assetWithSignedUrls,
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      console.error('Error fetching asset:', error);
+      throw new BadRequestException('Failed to retrieve asset');
     }
   }
 }

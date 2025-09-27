@@ -192,7 +192,7 @@ export class AssetController {
   }
 
   // delete token type
-  @Delete('delete-token-type')
+  @Delete('delete-token-type/:id')
   @ApiOperation({ summary: 'Delete a token Type (SUPER_ADMIN)' })
   @ApiResponse({ status: 200, description: 'Token type deleted successfully' })
   @ApiResponse({
@@ -205,7 +205,7 @@ export class AssetController {
     return this.assetService.deleteTokenType(id);
   }
   // delete asset type
-  @Delete('delete-asset-type')
+  @Delete('delete-asset-type/:id')
   @ApiOperation({ summary: 'Delete a asset Type (SUPER_ADMIN)' })
   @ApiResponse({ status: 200, description: 'Asset type deleted successfully' })
   @ApiResponse({

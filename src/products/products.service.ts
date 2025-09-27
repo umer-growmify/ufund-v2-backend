@@ -520,8 +520,4 @@ export class ProductsService {
       data: productWithSignedUrls,
     };
   }
-
-  remove(id: string) {
-    return `This action removes a #${id} product`;
-  }
 }

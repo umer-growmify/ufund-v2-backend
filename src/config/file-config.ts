@@ -174,3 +174,52 @@ export const editProductFileConfig: FileTypeConfig[] = [
     required: false,
   },
 ];
+
+export const editAssetFileConfig: FileTypeConfig[] = [
+  {
+    fieldName: 'auditorsReportKey',
+    allowedMimeTypes: [
+      'application/pdf',
+      'image/png',
+      'image/jpeg',
+      'image/jpg',
+    ],
+    maxSize: 5 * 1024 * 1024, // 5MB
+    required: false,
+  },
+  {
+    fieldName: 'documentKey',
+    allowedMimeTypes: [
+      'application/pdf',
+      'image/png',
+      'image/jpeg',
+      'image/jpg',
+    ],
+    maxSize: 5 * 1024 * 1024, // 5MB
+    required: false,
+  },
+  {
+    fieldName: 'productImageKey',
+    allowedMimeTypes: ['image/png', 'image/jpeg', 'image/jpg'],
+    maxSize: 2 * 1024 * 1024, // 2MB
+    required: false,
+  },
+  {
+    fieldName: 'assetImageKey',
+    allowedMimeTypes: ['image/png', 'image/jpeg', 'image/jpg'],
+    maxSize: 2 * 1024 * 1024, // 2MB
+    required: false,
+  },
+  {
+    fieldName: 'imageOneKey',
+    allowedMimeTypes: ['image/png', 'image/jpeg', 'image/jpg'],
+    maxSize: 2 * 1024 * 1024, // 2MB
+    required: false,
+  },
+  {
+    fieldName: 'imageTwoKey',
+    allowedMimeTypes: ['image/png', 'image/jpeg', 'image/jpg'],
+    maxSize: 2 * 1024 * 1024, // 2MB
+    required: false,
+  },
+];

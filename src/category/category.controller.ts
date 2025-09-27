@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   Post,
+  Put,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -24,7 +25,10 @@ import {
 import { Roles } from 'src/auth/guards/roles.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FileValidationInterceptor } from 'src/utils/file-validation.interceptor';
-import { categoryFileConfig } from 'src/config/file-config';
+import {
+  categoryFileConfig,
+  editCategoryFileConfig,
+} from 'src/config/file-config';
 
 @ApiTags('Category') // Group all under Category in Swagger
 @ApiBearerAuth() // Use Bearer token in Swagger
@@ -101,7 +105,7 @@ export class CategoryController {
     return this.categoryService.unblockCategory(id);
   }
 
-  @Post('update-category/:id')
+  @Put('update-category/:id')
   @ApiOperation({ summary: 'update a new category (SUPER_ADMIN only)' })
   @ApiResponse({ status: 201, description: 'Category update successfully' })
   @ApiResponse({
@@ -112,7 +116,7 @@ export class CategoryController {
   @Roles(AdminRoleType.SUPER_ADMIN)
   @UseInterceptors(
     FileInterceptor('image'),
-    new FileValidationInterceptor(categoryFileConfig),
+    new FileValidationInterceptor(editCategoryFileConfig),
   )
   async editCategory(
     @Param('id') id: string,

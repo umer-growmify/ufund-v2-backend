@@ -3,6 +3,7 @@ import {
   S3Client,
   PutObjectCommand,
   GetObjectCommand,
+  DeleteObjectsCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { ConfigService } from '@nestjs/config';
@@ -89,6 +90,31 @@ export class AwsService {
     } catch (error) {
       throw new InternalServerErrorException(
         `Failed to update file in S3: ${error.message}`,
+      );
+    }
+  }
+
+  async deleteFiles(keys: string[]): Promise<void> {
+    const bucket = this.configService.get<string>('AWS_S3_BUCKET');
+    if (!bucket) {
+      throw new InternalServerErrorException(
+        'AWS_S3_BUCKET is not defined in environment variables.',
+      );
+    }
+
+    const deleteParams = {
+      Bucket: bucket,
+      Delete: {
+        Objects: keys.map((key) => ({ Key: key })),
+        Quiet: false,
+      },
+    };
+
+    try {
+      await this.s3Client.send(new DeleteObjectsCommand(deleteParams));
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Failed to delete files from S3: ${error.message}`,
       );
     }
   }

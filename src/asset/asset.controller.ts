@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   Post,
+  Put,
   Req,
   UploadedFiles,
   UseGuards,
@@ -18,6 +19,7 @@ import {
   CreateAssetDto,
   CreateAssetTypeDto,
   CreateTokenTypeDto,
+  EditAssetDto,
   EditAssetTypeDto,
   EditTokenTypeDto,
   UpdateAssetsStatusDto,
@@ -27,7 +29,7 @@ import { RequestWithUser } from 'src/types/types';
 import { Roles } from 'src/auth/guards/roles.decorator';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { FileValidationInterceptor } from 'src/utils/file-validation.interceptor';
-import { assetsFileConfig } from 'src/config/file-config';
+import { assetsFileConfig, editAssetFileConfig } from 'src/config/file-config';
 
 @Controller('asset')
 export class AssetController {
@@ -156,7 +158,7 @@ export class AssetController {
   }
 
   // edit token type
-  @Post('edit-token-type/:id')
+  @Put('edit-token-type/:id')
   @ApiOperation({ summary: 'Edit a token Type (SUPER_ADMIN)' })
   @ApiResponse({ status: 200, description: 'Token type edited successfully' })
   @ApiResponse({
@@ -173,7 +175,7 @@ export class AssetController {
   }
 
   // edit asset type
-  @Post('edit-asset-type/:id')
+  @Put('edit-asset-type/:id')
   @ApiOperation({ summary: 'Edit a asset Type (SUPER_ADMIN)' })
   @ApiResponse({ status: 200, description: 'Asset type edited successfully' })
   @ApiResponse({
@@ -216,7 +218,7 @@ export class AssetController {
     return this.assetService.deleteAssetType(id);
   }
 
-  @Post('update-asset-status/:id')
+  @Put('update-asset-status/:id')
   @ApiOperation({ summary: 'Update asset status (SUPER_ADMIN)' })
   @ApiResponse({
     status: 200,
@@ -241,5 +243,59 @@ export class AssetController {
   @ApiResponse({ status: 200, description: 'Assets fetched successfully' })
   getAllAssets() {
     return this.assetService.getAllAssets();
+  }
+
+  @Put('edit/:id')
+  @ApiOperation({ summary: 'Edit an asset (Admin only)' })
+  @ApiResponse({ status: 200, description: 'Asset updated successfully' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Only admin can edit asset',
+  })
+  @ApiConsumes('multipart/form-data')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(AdminRoleType.SUPER_ADMIN)
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'auditorsReportKey', maxCount: 1 },
+      { name: 'documentKey', maxCount: 1 },
+      { name: 'productImageKey', maxCount: 1 },
+      { name: 'assetImageKey', maxCount: 1 },
+      { name: 'imageOneKey', maxCount: 1 },
+      { name: 'imageTwoKey', maxCount: 1 },
+    ]),
+    new FileValidationInterceptor(editAssetFileConfig), // You'll need to create this config
+  )
+  async editAsset(
+    @Body() editAssetDto: EditAssetDto,
+    @Param('id') assetId: string,
+    @UploadedFiles()
+    files: {
+      auditorsReportKey: Express.Multer.File[];
+      documentKey?: Express.Multer.File[];
+      productImageKey: Express.Multer.File[];
+      assetImageKey: Express.Multer.File[];
+      imageOneKey?: Express.Multer.File[];
+      imageTwoKey?: Express.Multer.File[];
+    },
+    @Req() req: RequestWithUser,
+  ) {
+    const userType = req.user.type;
+    const userId = req.user.id;
+
+    return this.assetService.editAsset(assetId, editAssetDto, files, userId);
+  }
+
+  @Delete('delete-assets/:id')
+  @ApiOperation({ summary: 'Delete an asset (Admin only)' })
+  @ApiResponse({ status: 200, description: 'Asset deleted successfully' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Only admin can delete asset',
+  })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(AdminRoleType.SUPER_ADMIN)
+  async deleteAsset(@Param('id') assetId: string, @Req() req: RequestWithUser) {
+    return this.assetService.deleteAsset(assetId);
   }
 }

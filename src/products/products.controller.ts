@@ -9,6 +9,7 @@ import {
   UploadedFiles,
   Param,
   Delete,
+  Put,
 } from '@nestjs/common';
 import { AdminRoleType, RoleType } from '@prisma/client';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
@@ -106,7 +107,7 @@ export class ProductsController {
   // products.controller.ts
 
   // change status of product by id
-  @Post('change-status/:id')
+  @Put('change-status/:id')
   @ApiOperation({ summary: 'Change status of a product by ID' })
   @ApiResponse({
     status: 200,
@@ -133,7 +134,7 @@ export class ProductsController {
     return this.productsService.deleteProduct(id);
   }
 
-  @Post('edit-product/:id')
+  @Put('edit-product/:id')
   @ApiOperation({ summary: 'Edit a product (Campaigner or SUPER_ADMIN)' })
   @ApiResponse({ status: 201, description: 'edit created successfully' })
   @ApiResponse({

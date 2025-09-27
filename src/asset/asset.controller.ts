@@ -20,6 +20,7 @@ import {
   CreateTokenTypeDto,
   EditAssetTypeDto,
   EditTokenTypeDto,
+  UpdateAssetsStatusDto,
 } from './dto/asset.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RequestWithUser } from 'src/types/types';
@@ -213,5 +214,32 @@ export class AssetController {
   @Roles(AdminRoleType.SUPER_ADMIN)
   deleteAssetType(@Param('id') id: string) {
     return this.assetService.deleteAssetType(id);
+  }
+
+  @Post('update-asset-status/:id')
+  @ApiOperation({ summary: 'Update asset status (SUPER_ADMIN)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Asset status updated successfully',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Only  SUPER_ADMIN can update asset status',
+  })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(AdminRoleType.SUPER_ADMIN)
+  updateAssetsStatus(
+    @Param('id') id: string,
+    @Body() updateAssetsStatusDto: UpdateAssetsStatusDto,
+  ) {
+    return this.assetService.updateAssetsStatus(id, updateAssetsStatusDto);
+  }
+
+  // get all assets
+  @Get('get-all-assets')
+  @ApiOperation({ summary: 'Get all assets' })
+  @ApiResponse({ status: 200, description: 'Assets fetched successfully' })
+  getAllAssets() {
+    return this.assetService.getAllAssets();
   }
 }

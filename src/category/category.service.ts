@@ -294,12 +294,51 @@ export class CategoryService {
   async getAllCategories() {
     try {
       const categories = await this.prisma.category.findMany();
+
+      if (!categories || categories.length === 0) {
+        throw new NotFoundException('No categories found');
+      }
+
+      // Generate signed URLs for category images
+      const categoriesWithImages = await Promise.all(
+        categories.map(async (category) => {
+          let imageUrl = category.imageUrl;
+
+          // Check if the imageUrl is an S3 key (not a full URL)
+          if (
+            imageUrl &&
+            !imageUrl.startsWith('http') &&
+            !imageUrl.startsWith('https')
+          ) {
+            try {
+              imageUrl = await this.awsService.getSignedUrl(
+                category.imageUrl as string,
+              );
+            } catch (error) {
+              console.error(
+                `Error generating signed URL for category ${category.id}:`,
+                error,
+              );
+              // Keep the original imageUrl if signed URL generation fails
+            }
+          }
+
+          return {
+            ...category,
+            imageUrl,
+          };
+        }),
+      );
+
       return {
         success: true,
         message: 'Categories retrieved successfully',
-        data: categories,
+        data: categoriesWithImages,
       };
     } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
       console.error('Error fetching categories:', error);
       throw new BadRequestException('Failed to retrieve categories');
     }

@@ -8,6 +8,7 @@ import {
   CreateAssetDto,
   CreateAssetTypeDto,
   CreateTokenTypeDto,
+  UpdateAssetsStatusDto,
 } from './dto/asset.dto';
 import { AwsService } from 'src/aws/aws.service';
 
@@ -289,6 +290,36 @@ export class AssetService {
           ? await this.awsService.getSignedUrl(asset.imageTwoKey)
           : null,
       },
+    };
+  }
+
+  async updateAssetsStatus(assetId: string, status: UpdateAssetsStatusDto) {
+    const asset = await this.prisma.asset.findUnique({
+      where: { id: assetId },
+    });
+
+    if (!asset) {
+      throw new NotFoundException(`Product with ID ${assetId} not found`);
+    }
+
+    const updatedAsset = await this.prisma.asset.update({
+      where: { id: assetId },
+      data: { status: status.status },
+    });
+
+    return {
+      success: true,
+      message: 'Asset status updated successfully',
+      data: updatedAsset,
+    };
+  }
+
+  async getAllAssets() {
+    const assets = await this.prisma.asset.findMany();
+    return {
+      success: true,
+      message: 'Assets retrieved successfully',
+      data: assets,
     };
   }
 }

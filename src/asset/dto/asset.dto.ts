@@ -13,6 +13,10 @@ import {
   Min,
 } from 'class-validator';
 
+enum UpdateStatus {
+  LIVE = 'LIVE',
+  REJECTED = 'REJECTED',
+}
 export class CreateAssetDto {
   @ApiProperty({ example: 'Gold Investment Asset' })
   @IsString()
@@ -273,4 +277,11 @@ export class EditAssetDto {
   @IsEnum(RiskScale)
   @IsOptional()
   riskScale: RiskScale;
+}
+
+export class UpdateAssetsStatusDto {
+  @ApiProperty({ example: 'live', description: 'New status of the product' })
+  @IsString()
+  @IsNotEmpty()
+  status: UpdateStatus;
 }

@@ -150,4 +150,13 @@ export class CategoryController {
   async getAllCategories() {
     return this.categoryService.getAllCategories();
   }
+
+  @Get('get-category-by-id/:id')
+  @ApiOperation({ summary: 'Get category by id (SUPER_ADMIN and Campaigner)' })
+  @ApiResponse({ status: 200, description: 'Category returned' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(AdminRoleType.SUPER_ADMIN)
+  async getCategoryById(@Param('id') id: string) {
+    return this.categoryService.getCategoryById(id);
+  }
 }

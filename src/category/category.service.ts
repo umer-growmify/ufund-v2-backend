@@ -343,4 +343,46 @@ export class CategoryService {
       throw new BadRequestException('Failed to retrieve categories');
     }
   }
+
+  async getCategoryById(id: string) {
+    try {
+      const category = await this.prisma.category.findUnique({
+        where: { id },
+      });
+
+      if (!category) {
+        throw new NotFoundException('Category not found');
+      }
+
+      let imageUrl = category.imageUrl;
+
+      // Check if the imageUrl is an S3 key (not a full URL)
+      if (
+        imageUrl &&
+        !imageUrl.startsWith('http') &&
+        !imageUrl.startsWith('https')
+      ) {
+        try {
+          imageUrl = await this.awsService.getSignedUrl(
+            category.imageUrl as string,
+          );
+        } catch (error) {
+          console.error(
+            `Error generating signed URL for category ${category.id}:`,
+            error,
+          );
+          // Keep the original imageUrl if signed URL generation fails
+        }
+      }
+
+      return {
+        success: true,
+        message: 'Category retrieved successfully',
+        data: { ...category, imageUrl },
+      };
+    } catch (error) {
+      console.error('Error fetching category:', error);
+      throw new BadRequestException('Failed to retrieve category');
+    }
+  }
 }

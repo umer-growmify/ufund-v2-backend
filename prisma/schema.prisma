@@ -74,6 +74,7 @@ model Category {
   id           String       @id @default(uuid())
   name         String       @unique
   imageUrl     String?
+  block        Boolean      @default(false)
   categoryType CategoryType
   product      Products[]
   assets       Asset[]

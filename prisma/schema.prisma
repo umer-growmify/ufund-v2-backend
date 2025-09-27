@@ -25,7 +25,6 @@ model User {
   updatedAt         DateTime       @updatedAt
   profile           Profile?
   Products          Products[]
-  Asset             Asset[]
   refreshTokens     RefreshToken[]
 }
 
@@ -156,8 +155,6 @@ model Asset {
   tokenTypeId     String
   tokenType       TokenType @relation(fields: [tokenTypeId], references: [id], onDelete: Cascade)
 
-  userId    String?
-  user      User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
   creatorId String?
 
   network          String?

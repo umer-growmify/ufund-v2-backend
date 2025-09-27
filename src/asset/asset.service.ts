@@ -123,6 +123,7 @@ export class AssetService {
           offerStartDate,
           offerEndDate,
           rewardDate,
+          creatorId: id,
           auditorsReportKey: auditorsReportKey?.key,
           documentKey: documentKey?.key,
           productImageKey: productImageKey?.key,
@@ -183,26 +184,6 @@ export class AssetService {
         throw new BadRequestException(
           'offerEndDate must be after offerStartDate',
         );
-      }
-
-      // Validate campaignerId for admin
-      if (!createAssetDto.userId) {
-        throw new BadRequestException(
-          'User ID (campaigner) is required for admin asset creation',
-        );
-      }
-
-      const campaignerExists = await this.prisma.user.findUnique({
-        where: { id: createAssetDto.userId },
-        select: { roles: true },
-      });
-
-      if (!campaignerExists) {
-        throw new BadRequestException('Invalid campaigner ID');
-      }
-
-      if (!campaignerExists.roles.includes('campaigner')) {
-        throw new BadRequestException('User is not a campaigner');
       }
 
       const auditorsReportKey = await this.awsService.uploadFile(
@@ -433,7 +414,6 @@ export class AssetService {
           category: true,
           assetType: true,
           tokenType: true,
-          user: true,
         },
       });
 
@@ -503,7 +483,6 @@ export class AssetService {
           category: true,
           assetType: true,
           tokenType: true,
-          user: true,
         },
       });
 
@@ -639,7 +618,6 @@ export class AssetService {
           category: true,
           assetType: true,
           tokenType: true,
-          user: true,
         },
       });
 
@@ -731,7 +709,6 @@ export class AssetService {
           category: true,
           assetType: true,
           tokenType: true,
-          user: true,
         },
       });
 

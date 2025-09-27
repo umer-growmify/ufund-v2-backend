@@ -75,11 +75,6 @@ export class CreateAssetDto {
   @IsUUID()
   tokenTypeId: string;
 
-  @ApiProperty({ example: 'user-uuid-id', required: false })
-  @IsOptional()
-  @IsUUID()
-  userId?: string;
-
   @ApiProperty({ example: 'creator-uuid-id', required: false })
   @IsOptional()
   @IsUUID()

@@ -1,6 +1,9 @@
 import {
   Body,
   Controller,
+  Delete,
+  Get,
+  Param,
   Post,
   Req,
   UploadedFiles,
@@ -15,6 +18,8 @@ import {
   CreateAssetDto,
   CreateAssetTypeDto,
   CreateTokenTypeDto,
+  EditAssetTypeDto,
+  EditTokenTypeDto,
 } from './dto/asset.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RequestWithUser } from 'src/types/types';
@@ -131,5 +136,82 @@ export class AssetController {
     const role = req.user.activeRole;
     console.log('role', role);
     return this.assetService.createAdminAsset(createAssetDto, id, files);
+  }
+
+  // get all asset types
+  @Get('get-asset-types')
+  @ApiOperation({ summary: 'Get all asset Types' })
+  @ApiResponse({ status: 200, description: 'Asset types fetched successfully' })
+  getAllAssetTypes() {
+    return this.assetService.getAllAssetsType();
+  }
+
+  // get all token types
+  @Get('get-token-types')
+  @ApiOperation({ summary: 'Get all token Types' })
+  @ApiResponse({ status: 200, description: 'Token types fetched successfully' })
+  getAllTokenTypes() {
+    return this.assetService.getAllTokenType();
+  }
+
+  // edit token type
+  @Post('edit-token-type/:id')
+  @ApiOperation({ summary: 'Edit a token Type (SUPER_ADMIN)' })
+  @ApiResponse({ status: 200, description: 'Token type edited successfully' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Only  SUPER_ADMIN can edit token Type',
+  })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(AdminRoleType.SUPER_ADMIN)
+  editTokenType(
+    @Param('id') id: string,
+    @Body() createTokenTypeDto: EditTokenTypeDto,
+  ) {
+    return this.assetService.editTokenType(id, createTokenTypeDto.name);
+  }
+
+  // edit asset type
+  @Post('edit-asset-type/:id')
+  @ApiOperation({ summary: 'Edit a asset Type (SUPER_ADMIN)' })
+  @ApiResponse({ status: 200, description: 'Asset type edited successfully' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Only  SUPER_ADMIN can edit asset Type',
+  })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(AdminRoleType.SUPER_ADMIN)
+  editAssetType(
+    @Param('id') id: string,
+    @Body() createAssetTypeDto: EditAssetTypeDto,
+  ) {
+    return this.assetService.editAssetType(id, createAssetTypeDto.name);
+  }
+
+  // delete token type
+  @Delete('delete-token-type')
+  @ApiOperation({ summary: 'Delete a token Type (SUPER_ADMIN)' })
+  @ApiResponse({ status: 200, description: 'Token type deleted successfully' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Only  SUPER_ADMIN can delete token Type',
+  })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(AdminRoleType.SUPER_ADMIN)
+  deleteTokenType(@Param('id') id: string) {
+    return this.assetService.deleteTokenType(id);
+  }
+  // delete asset type
+  @Delete('delete-asset-type')
+  @ApiOperation({ summary: 'Delete a asset Type (SUPER_ADMIN)' })
+  @ApiResponse({ status: 200, description: 'Asset type deleted successfully' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Only  SUPER_ADMIN can delete asset Type',
+  })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(AdminRoleType.SUPER_ADMIN)
+  deleteAssetType(@Param('id') id: string) {
+    return this.assetService.deleteAssetType(id);
   }
 }

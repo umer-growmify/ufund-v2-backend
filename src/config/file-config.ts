@@ -62,6 +62,15 @@ export const prfileFileConfig: FileTypeConfig[] = [
 export const categoryFileConfig: FileTypeConfig[] = [
   {
     fieldName: 'image',
+    required: true,
+    allowedMimeTypes: ['image/jpeg', 'image/png', 'image/jpg'],
+    maxSize: 5 * 1024 * 1024,
+  },
+];
+
+export const editCategoryFileConfig: FileTypeConfig[] = [
+  {
+    fieldName: 'image',
     required: false,
     allowedMimeTypes: ['image/jpeg', 'image/png', 'image/jpg'],
     maxSize: 5 * 1024 * 1024,
@@ -111,6 +120,55 @@ export const assetsFileConfig: FileTypeConfig[] = [
   },
   {
     fieldName: 'imageTwoKey',
+    allowedMimeTypes: ['image/png', 'image/jpeg', 'image/jpg'],
+    maxSize: 2 * 1024 * 1024, // 2MB
+    required: false,
+  },
+];
+
+export const editProductFileConfig: FileTypeConfig[] = [
+  {
+    fieldName: 'auditorsReport',
+    allowedMimeTypes: [
+      'application/pdf',
+      'image/png',
+      'image/jpeg',
+      'image/jpg',
+    ],
+    maxSize: 5 * 1024 * 1024, // 5MB
+    required: false,
+  },
+  {
+    fieldName: 'document',
+    allowedMimeTypes: [
+      'application/pdf',
+      'image/png',
+      'image/jpeg',
+      'image/jpg',
+    ],
+    maxSize: 5 * 1024 * 1024, // 5MB
+    required: false,
+  },
+  {
+    fieldName: 'tokenImage',
+    allowedMimeTypes: ['image/png', 'image/jpeg', 'image/jpg'],
+    maxSize: 2 * 1024 * 1024, // 2MB
+    required: false,
+  },
+  {
+    fieldName: 'assetImage',
+    allowedMimeTypes: ['image/png', 'image/jpeg', 'image/jpg'],
+    maxSize: 2 * 1024 * 1024, // 2MB
+    required: false,
+  },
+  {
+    fieldName: 'imageOne',
+    allowedMimeTypes: ['image/png', 'image/jpeg', 'image/jpg'],
+    maxSize: 2 * 1024 * 1024, // 2MB
+    required: false,
+  },
+  {
+    fieldName: 'imageTwo',
     allowedMimeTypes: ['image/png', 'image/jpeg', 'image/jpg'],
     maxSize: 2 * 1024 * 1024, // 2MB
     required: false,

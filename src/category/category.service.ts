@@ -290,4 +290,18 @@ export class CategoryService {
       throw new BadRequestException('Failed to delete category');
     }
   }
+
+  async getAllCategories() {
+    try {
+      const categories = await this.prisma.category.findMany();
+      return {
+        success: true,
+        message: 'Categories retrieved successfully',
+        data: categories,
+      };
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      throw new BadRequestException('Failed to retrieve categories');
+    }
+  }
 }

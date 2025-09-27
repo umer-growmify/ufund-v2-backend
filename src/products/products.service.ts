@@ -6,7 +6,11 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AwsService } from 'src/aws/aws.service';
-import { CreateProductDto } from './dto/product.dto';
+import {
+  CreateProductDto,
+  EditProductDto,
+  UpdateProductStatusDto,
+} from './dto/product.dto';
 
 @Injectable()
 export class ProductsService {
@@ -196,7 +200,26 @@ export class ProductsService {
     };
   }
 
-  async updateProductStatus(productId: string) {}
+  async updateProductStatus(productId: string, status: UpdateProductStatusDto) {
+    const product = await this.prisma.products.findUnique({
+      where: { id: productId },
+    });
+
+    if (!product) {
+      throw new NotFoundException(`Product with ID ${productId} not found`);
+    }
+
+    const updatedProduct = await this.prisma.products.update({
+      where: { id: productId },
+      data: { status: status.status },
+    });
+
+    return {
+      success: true,
+      message: 'Product status updated successfully',
+      data: updatedProduct,
+    };
+  }
 
   async getProductSignedUrls(productId: string) {
     const product = await this.prisma.products.findUnique({
@@ -231,6 +254,228 @@ export class ProductsService {
           : null,
       },
     };
+  }
+
+  async deleteProduct(productId: string) {
+    const product = await this.prisma.products.findUnique({
+      where: { id: productId },
+    });
+
+    if (!product) {
+      throw new NotFoundException(`Product with ID ${productId} not found`);
+    }
+
+    // Delete product from database
+    await this.prisma.products.delete({
+      where: { id: productId },
+    });
+
+    return {
+      success: true,
+      message: 'Product and associated files deleted successfully',
+    };
+  }
+
+  // edit Prduct by id
+
+  async editProduct(
+    productId: string,
+    editProductDto: EditProductDto,
+    files: {
+      auditorsReport: Express.Multer.File[];
+      document?: Express.Multer.File[];
+      tokenImage: Express.Multer.File[];
+      assetImage: Express.Multer.File[];
+      imageOne?: Express.Multer.File[];
+      imageTwo?: Express.Multer.File[];
+    },
+    userId: string,
+  ) {
+    try {
+      // Only admin can edit products
+
+      // Find the existing product
+      const product = await this.prisma.products.findUnique({
+        where: { id: productId },
+        include: {
+          campaigner: true,
+          category: true,
+        },
+      });
+
+      if (!product) {
+        throw new NotFoundException(`Product with ID ${productId} not found`);
+      }
+
+      // Prepare update data
+      const updateData: any = {
+        ...editProductDto,
+        updatedAt: new Date(),
+      };
+
+      // Remove undefined values
+      Object.keys(updateData).forEach((key) => {
+        if (updateData[key] === undefined) {
+          delete updateData[key];
+        }
+      });
+
+      // Handle date fields if they are provided
+      if (editProductDto.offerStartDate) {
+        updateData.offerStartDate = new Date(editProductDto.offerStartDate);
+      }
+      if (editProductDto.offerEndDate) {
+        updateData.offerEndDate = new Date(editProductDto.offerEndDate);
+      }
+      if (editProductDto.investmentStartDate) {
+        updateData.investmentStartDate = new Date(
+          editProductDto.investmentStartDate,
+        );
+      }
+      if (editProductDto.maturityDate) {
+        updateData.maturityDate = new Date(editProductDto.maturityDate);
+      }
+
+      // Handle file updates using your updateFile method
+      const fileUpdates: Promise<{ key: string; url: string }>[] = [];
+
+      if (files.auditorsReport?.[0] && product.auditorsReportKey) {
+        fileUpdates.push(
+          this.awsService.updateFile(
+            files.auditorsReport[0],
+            product.auditorsReportKey,
+          ),
+        );
+      } else if (files.auditorsReport?.[0] && !product.auditorsReportKey) {
+        // If no existing key, upload as new file
+        const auditorsReport = await this.awsService.uploadFile(
+          files.auditorsReport[0],
+          userId,
+          'products',
+        );
+        updateData.auditorsReportKey = auditorsReport.key;
+      }
+
+      if (files.document?.[0] && product.documentKey) {
+        fileUpdates.push(
+          this.awsService.updateFile(files.document[0], product.documentKey),
+        );
+      } else if (files.document?.[0] && !product.documentKey) {
+        const document = await this.awsService.uploadFile(
+          files.document[0],
+          userId,
+          'products',
+        );
+        updateData.documentKey = document.key;
+      }
+
+      if (files.tokenImage?.[0] && product.tokenImageKey) {
+        fileUpdates.push(
+          this.awsService.updateFile(
+            files.tokenImage[0],
+            product.tokenImageKey,
+          ),
+        );
+      } else if (files.tokenImage?.[0] && !product.tokenImageKey) {
+        const tokenImage = await this.awsService.uploadFile(
+          files.tokenImage[0],
+          userId,
+          'products',
+        );
+        updateData.tokenImageKey = tokenImage.key;
+      }
+
+      if (files.assetImage?.[0] && product.assetImageKey) {
+        fileUpdates.push(
+          this.awsService.updateFile(
+            files.assetImage[0],
+            product.assetImageKey,
+          ),
+        );
+      } else if (files.assetImage?.[0] && !product.assetImageKey) {
+        const assetImage = await this.awsService.uploadFile(
+          files.assetImage[0],
+          userId,
+          'products',
+        );
+        updateData.assetImageKey = assetImage.key;
+      }
+
+      if (files.imageOne?.[0] && product.imageOneKey) {
+        fileUpdates.push(
+          this.awsService.updateFile(files.imageOne[0], product.imageOneKey),
+        );
+      } else if (files.imageOne?.[0] && !product.imageOneKey) {
+        const imageOne = await this.awsService.uploadFile(
+          files.imageOne[0],
+          userId,
+          'products',
+        );
+        updateData.imageOneKey = imageOne.key;
+      }
+
+      if (files.imageTwo?.[0] && product.imageTwoKey) {
+        fileUpdates.push(
+          this.awsService.updateFile(files.imageTwo[0], product.imageTwoKey),
+        );
+      } else if (files.imageTwo?.[0] && !product.imageTwoKey) {
+        const imageTwo = await this.awsService.uploadFile(
+          files.imageTwo[0],
+          userId,
+          'products',
+        );
+        updateData.imageTwoKey = imageTwo.key;
+      }
+
+      // Wait for all file updates to complete
+      if (fileUpdates.length > 0) {
+        await Promise.all(fileUpdates);
+      }
+
+      // Update the product in database
+      const updatedProduct = await this.prisma.products.update({
+        where: { id: productId },
+        data: updateData,
+        include: {
+          campaigner: true,
+          category: true,
+        },
+      });
+
+      // Generate signed URLs for the updated product
+      const productWithSignedUrls = {
+        ...updatedProduct,
+        auditorsReportUrl: updatedProduct.auditorsReportKey
+          ? await this.awsService.getSignedUrl(updatedProduct.auditorsReportKey)
+          : null,
+        documentUrl: updatedProduct.documentKey
+          ? await this.awsService.getSignedUrl(updatedProduct.documentKey)
+          : null,
+        tokenImageUrl: updatedProduct.tokenImageKey
+          ? await this.awsService.getSignedUrl(updatedProduct.tokenImageKey)
+          : null,
+        assetImageUrl: updatedProduct.assetImageKey
+          ? await this.awsService.getSignedUrl(updatedProduct.assetImageKey)
+          : null,
+        imageOneUrl: updatedProduct.imageOneKey
+          ? await this.awsService.getSignedUrl(updatedProduct.imageOneKey)
+          : null,
+        imageTwoUrl: updatedProduct.imageTwoKey
+          ? await this.awsService.getSignedUrl(updatedProduct.imageTwoKey)
+          : null,
+      };
+
+      return {
+        success: true,
+        message: 'Product updated successfully',
+        data: productWithSignedUrls,
+      };
+    } catch (error) {
+      console.error('Error updating product:', error);
+      throw new BadRequestException(
+        error.message || 'Failed to update product',
+      );
+    }
   }
 
   async findOne(id: string) {

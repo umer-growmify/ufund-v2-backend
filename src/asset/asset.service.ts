@@ -174,6 +174,89 @@ export class AssetService {
     }
   }
 
+  async getAllAssetsType() {
+    const assetsType = await this.prisma.assetType.findMany();
+    return {
+      success: true,
+      message: 'Assets Type retrieved successfully',
+      data: assetsType,
+    };
+  }
+
+  async getAllTokenType() {
+    const tokenType = await this.prisma.tokenType.findMany();
+    return {
+      success: true,
+      message: 'Token Type retrieved successfully',
+      data: tokenType,
+    };
+  }
+
+  // edit token type
+
+  async editTokenType(id: string, name: string) {
+    try {
+      const tokenType = await this.prisma.tokenType.update({
+        where: { id },
+        data: { name },
+      });
+      return {
+        success: true,
+        message: 'Token Type updated successfully',
+        data: tokenType,
+      };
+    } catch (error) {
+      throw new BadRequestException('Token Type not updated');
+    }
+  }
+
+  async editAssetType(id: string, name: string) {
+    try {
+      const assetType = await this.prisma.assetType.update({
+        where: { id },
+        data: { name },
+      });
+      return {
+        success: true,
+        message: 'Asset Type updated successfully',
+        data: assetType,
+      };
+    } catch (error) {
+      throw new BadRequestException('Asset Type not updated');
+    }
+  }
+
+  // delete assests type
+  async deleteAssetType(id: string) {
+    try {
+      const assetType = await this.prisma.assetType.delete({
+        where: { id },
+      });
+      return {
+        success: true,
+        message: 'Asset Type deleted successfully',
+        data: assetType,
+      };
+    } catch (error) {
+      throw new BadRequestException('Asset Type not deleted');
+    }
+  }
+  // delete token type
+  async deleteTokenType(id: string) {
+    try {
+      const tokenType = await this.prisma.tokenType.delete({
+        where: { id },
+      });
+      return {
+        success: true,
+        message: 'Token Type deleted successfully',
+        data: tokenType,
+      };
+    } catch (error) {
+      throw new BadRequestException('Token Type not deleted');
+    }
+  }
+
   async getAssetsSignedUrls(productId: string) {
     const asset = await this.prisma.asset.findUnique({
       where: { id: productId },

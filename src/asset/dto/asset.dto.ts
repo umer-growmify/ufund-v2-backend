@@ -137,3 +137,140 @@ export class CreateTokenTypeDto {
   @IsNotEmpty()
   name: string;
 }
+
+export class EditTokenTypeDto {
+  @ApiProperty({
+    example: 'Write type of the token',
+    description: 'Name of the Token Type',
+  })
+  @IsString()
+  @IsNotEmpty()
+  @IsOptional()
+  name: string;
+}
+
+export class EditAssetTypeDto {
+  @ApiProperty({
+    example: 'Write type of the asset',
+    description: 'Name of the asset Type',
+  })
+  @IsString()
+  @IsNotEmpty()
+  @IsOptional()
+  name: string;
+}
+
+export class EditAssetDto {
+  @ApiProperty({ example: 'Gold Investment Asset' })
+  @IsString()
+  @IsOptional()
+  assetName: string;
+
+  @ApiProperty({ example: 'GoldToken' })
+  @IsString()
+  @IsOptional()
+  tokenName: string;
+
+  @ApiProperty({ example: '1000000' })
+  @IsString()
+  @IsOptional()
+  tokenValue: string;
+
+  @ApiProperty({ example: 'GLD' })
+  @IsString()
+  @IsOptional()
+  tokenSymbol: string;
+
+  @ApiProperty({ example: '1000000' })
+  @IsString()
+  @IsOptional()
+  tokenSupply: string;
+
+  @ApiProperty({ example: 18 })
+  @IsInt()
+  @IsOptional()
+  decimal: number;
+
+  @ApiProperty({ example: 'KPMG Auditors' })
+  @IsString()
+  @IsOptional()
+  auditorsName: string;
+
+  @ApiProperty({ example: 5 })
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  @IsOptional()
+  adminCommission: number;
+
+  @ApiProperty({ example: 1000000 })
+  @IsNumber()
+  @IsOptional()
+  assetValue: number;
+
+  @ApiProperty({ example: 'category-uuid-id' })
+  @IsUUID()
+  @IsOptional()
+  categoryId: string;
+
+  @ApiProperty({ example: 'asset-type-uuid-id' })
+  @IsUUID()
+  @IsOptional()
+  assetTypeId: string;
+
+  @ApiProperty({ example: 'token-type-uuid-id' })
+  @IsUUID()
+  @IsOptional()
+  tokenTypeId: string;
+
+  @ApiProperty({ example: 'user-uuid-id', required: false })
+  @IsOptional()
+  @IsUUID()
+  @IsOptional()
+  userId?: string;
+
+  @ApiProperty({ example: 'creator-uuid-id', required: false })
+  @IsOptional()
+  @IsUUID()
+  creatorId?: string;
+
+  @ApiProperty({ example: 'Ethereum', required: false })
+  @IsOptional()
+  @IsString()
+  network?: string;
+
+  @ApiProperty({ example: 'ERC20Template', required: false })
+  @IsOptional()
+  @IsString()
+  contractTemplate?: string;
+
+  @ApiProperty({ example: '2025-08-01' })
+  @IsDateString()
+  @IsOptional()
+  offerStartDate: string;
+
+  @ApiProperty({ example: '2025-09-01' })
+  @IsDateString()
+  @IsOptional()
+  offerEndDate: string;
+
+  @ApiProperty({ example: '2025-12-01', required: false })
+  @IsOptional()
+  @IsDateString()
+  rewardDate?: string;
+
+  @ApiProperty({ example: 'Annual profit reward', required: false })
+  @IsOptional()
+  @IsString()
+  reward?: string;
+
+  @ApiProperty({ example: 'Description of the asset', required: false })
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @ApiProperty({ example: 'MEDIUM', enum: RiskScale })
+  @IsEnum(RiskScale)
+  @IsOptional()
+  riskScale: RiskScale;
+}

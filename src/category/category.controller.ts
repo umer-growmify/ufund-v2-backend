@@ -137,4 +137,13 @@ export class CategoryController {
   async deleteCategory(@Param('id') id: string) {
     return this.categoryService.deleteCategory(id);
   }
+
+  @Get('get-all-category')
+  @ApiOperation({ summary: 'Get all categories (SUPER_ADMIN and Campaigner)' })
+  @ApiResponse({ status: 200, description: 'List of all categories returned' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(AdminRoleType.SUPER_ADMIN)
+  async getAllCategories() {
+    return this.categoryService.getAllCategories();
+  }
 }

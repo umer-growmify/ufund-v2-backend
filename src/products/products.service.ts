@@ -196,6 +196,8 @@ export class ProductsService {
     };
   }
 
+  async updateProductStatus(productId: string) {}
+
   async getProductSignedUrls(productId: string) {
     const product = await this.prisma.products.findUnique({
       where: { id: productId },

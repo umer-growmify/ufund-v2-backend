@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateCategoryDto } from './dto/category.dto';
+import { CreateCategoryDto, UpdateCategoryDto } from './dto/category.dto';
 import { AwsService } from 'src/aws/aws.service';
 
 @Injectable()
@@ -50,7 +50,7 @@ export class CategoryService {
   async getAllProductCategories() {
     try {
       const categories = await this.prisma.category.findMany({
-        where: { categoryType: 'PRODUCT' },
+        where: { categoryType: 'PRODUCT', block: false },
       });
 
       if (!categories || categories.length === 0) {
@@ -126,7 +126,7 @@ export class CategoryService {
   async getAllTokenCategories() {
     try {
       const categories = await this.prisma.category.findMany({
-        where: { categoryType: 'TOKEN' },
+        where: { categoryType: 'TOKEN', block: false },
       });
 
       if (!categories || categories.length === 0) {
@@ -196,6 +196,98 @@ export class CategoryService {
       }
       console.error('Error fetching categories:', error);
       throw new BadRequestException('Failed to retrieve categories');
+    }
+  }
+
+  async blockCategory(categoryId: string) {
+    try {
+      const category = await this.prisma.category.findUnique({
+        where: { id: categoryId },
+      });
+
+      if (!category) {
+        throw new NotFoundException('Category not found');
+      }
+
+      if (category.block) {
+        throw new BadRequestException('Category is already blocked');
+      }
+
+      const blockedCategory = await this.prisma.category.update({
+        where: { id: categoryId },
+        data: { block: true },
+      });
+
+      return {
+        success: true,
+        message: 'Category blocked successfully',
+        data: blockedCategory,
+      };
+    } catch (error) {
+      console.error('Error blocking category:', error);
+      throw new BadRequestException('Failed to block category');
+    }
+  }
+
+  async unblockCategory(categoryId: string) {
+    try {
+      const category = await this.prisma.category.findUnique({
+        where: { id: categoryId },
+      });
+
+      if (!category) {
+        throw new NotFoundException('Category not found');
+      }
+      if (!category.block) {
+        throw new BadRequestException('Category is not blocked');
+      }
+
+      const unblockedCategory = await this.prisma.category.update({
+        where: { id: categoryId },
+        data: { block: false },
+      });
+      return {
+        success: true,
+        message: 'Category unblocked successfully',
+        data: unblockedCategory,
+      };
+    } catch (error) {
+      console.error('Error unblocking category:', error);
+      throw new BadRequestException('Failed to unblock category');
+    }
+  }
+
+  // edit category by id
+  async editCategory(id: string, data: UpdateCategoryDto, file?: any) {
+    try {
+      const category = await this.prisma.category.update({
+        where: { id },
+        data,
+      });
+      return {
+        success: true,
+        message: 'Category updated successfully',
+        data: category,
+      };
+    } catch (error) {
+      console.error('Error updating category:', error);
+      throw new BadRequestException('Failed to update category');
+    }
+  }
+
+  async deleteCategory(id: string) {
+    try {
+      const category = await this.prisma.category.delete({
+        where: { id },
+      });
+      return {
+        success: true,
+        message: 'Category deleted successfully',
+        data: category,
+      };
+    } catch (error) {
+      console.error('Error deleting category:', error);
+      throw new BadRequestException('Failed to delete category');
     }
   }
 }

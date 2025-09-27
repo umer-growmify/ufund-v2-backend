@@ -97,6 +97,8 @@ export class ProductsController {
 
   // products.controller.ts
 
+  // change status of product by id
+
   @Get(':id')
   @ApiOperation({ summary: 'Get a single product by ID' })
   @ApiResponse({ status: 200, description: 'Product returned successfully' })
@@ -106,5 +108,4 @@ export class ProductsController {
   getProductById(@Param('id') id: string) {
     return this.productsService.findOne(id);
   }
-
 }

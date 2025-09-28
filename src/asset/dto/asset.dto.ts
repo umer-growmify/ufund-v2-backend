@@ -223,7 +223,6 @@ export class EditAssetDto {
   @ApiProperty({ example: 'user-uuid-id', required: false })
   @IsOptional()
   @IsUUID()
-  @IsOptional()
   userId?: string;
 
   @ApiProperty({ example: 'creator-uuid-id', required: false })

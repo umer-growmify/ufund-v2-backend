@@ -169,49 +169,41 @@ export class UpdateProductStatusDto {
 export class EditProductDto {
   @ApiProperty({ example: 'iPhone 15 Pro', description: 'Product name' })
   @IsString()
-  @IsNotEmpty()
   @IsOptional()
   productName: string;
 
   @ApiProperty({ example: 'Apple', description: 'Brand name' })
   @IsString()
-  @IsNotEmpty()
   @IsOptional()
   brand: string;
 
   @ApiProperty({ example: '100', description: 'Number of product units' })
   @IsString()
-  @IsNotEmpty()
   @IsOptional()
   numberOfProducts: string;
 
   @ApiProperty({ example: '8517.12.00', description: 'HS Code of product' })
   @IsString()
-  @IsNotEmpty()
   @IsOptional()
   hsCode: string;
 
   @ApiProperty({ example: '1234567890123', description: 'EAN code' })
   @IsString()
-  @IsNotEmpty()
   @IsOptional()
   eanCode: string;
 
   @ApiProperty({ example: '012345678905', description: 'UPC code' })
   @IsString()
-  @IsNotEmpty()
   @IsOptional()
   upcCode: string;
 
   @ApiProperty({ example: 'uuid-of-category', description: 'Category ID' })
   @IsString()
-  @IsNotEmpty()
   @IsOptional()
   categoryId: string;
 
   @ApiProperty({ example: '1000000', description: 'Total product value' })
   @IsString()
-  @IsNotEmpty()
   @IsOptional()
   totalValue: string;
 
@@ -237,7 +229,6 @@ export class EditProductDto {
 
   @ApiProperty({ example: '1000', description: 'Price per unit' })
   @IsString()
-  @IsNotEmpty()
   @IsOptional()
   unitPrice: string;
 
@@ -267,7 +258,6 @@ export class EditProductDto {
     description: 'Description of the product',
   })
   @IsString()
-  @IsNotEmpty()
   @IsOptional()
   description: string;
 
@@ -277,7 +267,6 @@ export class EditProductDto {
     description: 'Risk scale classification',
   })
   @IsEnum(RiskScale)
-  @IsNotEmpty()
   @IsOptional()
   riskScale: RiskScale;
 
@@ -286,7 +275,6 @@ export class EditProductDto {
     description: 'Offer start date in YYYY-MM-DD format',
   })
   @IsDateString()
-  @IsNotEmpty()
   @IsOptional()
   offerStartDate: string;
 
@@ -295,19 +283,16 @@ export class EditProductDto {
     description: 'Offer end date in YYYY-MM-DD format',
   })
   @IsDateString()
-  @IsNotEmpty()
   @IsOptional()
   offerEndDate: string;
 
   @ApiProperty({ example: '2025-08-02', description: 'Investment start date' })
   @IsDateString()
-  @IsNotEmpty()
   @IsOptional()
   investmentStartDate: string;
 
   @ApiProperty({ example: 90, description: 'Number of days until maturity' })
   @IsNumber()
-  @IsNotEmpty()
   @IsOptional()
   maturityCountDays: number;
 
@@ -316,7 +301,6 @@ export class EditProductDto {
     description: 'Date when investment matures',
   })
   @IsDateString()
-  @IsNotEmpty()
   @IsOptional()
   maturityDate: string;
 }

@@ -56,7 +56,7 @@ export class CreateProductDto {
   @IsNotEmpty()
   categoryId: string;
 
-  @ApiProperty({ example: '1000000', description: 'Total product value' })
+  @ApiProperty({ example: 'USD', description: 'Total product value' })
   @IsString()
   @IsNotEmpty()
   totalValue: string;

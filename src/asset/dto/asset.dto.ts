@@ -143,7 +143,6 @@ export class EditTokenTypeDto {
     description: 'Name of the Token Type',
   })
   @IsString()
-  @IsNotEmpty()
   @IsOptional()
   name: string;
 }
@@ -154,7 +153,6 @@ export class EditAssetTypeDto {
     description: 'Name of the asset Type',
   })
   @IsString()
-  @IsNotEmpty()
   @IsOptional()
   name: string;
 }

@@ -87,9 +87,9 @@ export class CreateProductDto {
   unitPrice: string;
 
   @ApiProperty({ example: 100000, description: 'Total value of all products' })
-  @IsNumber()
   @IsOptional()
-  productTotalValue: number;
+  @IsString()
+  productTotalValue: String;
 
   @ApiPropertyOptional({
     example: 'uuid-of-campaigner',

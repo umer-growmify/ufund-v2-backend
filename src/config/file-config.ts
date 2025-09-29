@@ -62,7 +62,7 @@ export const prfileFileConfig: FileTypeConfig[] = [
 export const categoryFileConfig: FileTypeConfig[] = [
   {
     fieldName: 'image',
-    required: true,
+    required: false,
     allowedMimeTypes: ['image/jpeg', 'image/png', 'image/jpg'],
     maxSize: 5 * 1024 * 1024,
   },

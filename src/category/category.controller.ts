@@ -53,6 +53,8 @@ export class CategoryController {
     @Body() createCategoryDto: CreateCategoryDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
+    console.log('Image is this', file);
+
     console.log(`Creating category with name: ${createCategoryDto.name}`);
     return this.categoryService.createCategory(createCategoryDto, file);
   }

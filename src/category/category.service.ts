@@ -6,6 +6,7 @@ import {
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateCategoryDto, UpdateCategoryDto } from './dto/category.dto';
 import { AwsService } from 'src/aws/aws.service';
+import { Multer } from 'multer';
 
 @Injectable()
 export class CategoryService {
@@ -14,9 +15,15 @@ export class CategoryService {
     private readonly awsService: AwsService,
   ) {}
 
-  async createCategory(createCategoryDto: CreateCategoryDto, file?: any) {
+  async createCategory(
+    createCategoryDto: CreateCategoryDto,
+    file?: Express.Multer.File,
+  ) {
     let imageKey: string | undefined;
     let imageUrl: string | undefined;
+
+    console.log('Creating category with data:', createCategoryDto);
+
     if (file) {
       const { key, url } = await this.awsService.uploadFile(
         file,
@@ -27,6 +34,8 @@ export class CategoryService {
       imageUrl = url;
     }
 
+    console.log('Image Key:', imageKey);
+
     try {
       const createCategory = await this.prisma.category.create({
         data: {
@@ -35,6 +44,8 @@ export class CategoryService {
           categoryType: createCategoryDto.categoryType,
         },
       });
+
+      console.log('Category created:', createCategory);
 
       return {
         success: true,

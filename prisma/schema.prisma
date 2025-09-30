@@ -21,6 +21,7 @@ model User {
   verificationToken String?
   provider          String?
   providerId        String?
+  status            UserStatus     @default(PENDING)
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
   profile           Profile?
@@ -237,5 +238,11 @@ enum Status {
   PENDING
   LIVE
   SOLD
+  REJECTED
+}
+
+enum UserStatus {
+  PENDING
+  APPROVED
   REJECTED
 }

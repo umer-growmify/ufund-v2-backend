@@ -3,10 +3,9 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { AwsService } from 'src/aws/aws.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateCategoryDto, UpdateCategoryDto } from './dto/category.dto';
-import { AwsService } from 'src/aws/aws.service';
-import { Multer } from 'multer';
 
 @Injectable()
 export class CategoryService {

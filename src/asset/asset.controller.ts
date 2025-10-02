@@ -320,6 +320,6 @@ export class AssetController {
   @ApiOperation({ summary: 'Get asset by id' })
   @ApiResponse({ status: 200, description: 'Asset fetched successfully' })
   async getAssetById(@Param('id') id: string) {
-    return this.assetService.assetTypeById(id);
+    return this.assetService.getAssetById(id);
   }
 }

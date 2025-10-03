@@ -345,6 +345,8 @@ export class AuthService {
       where: { userId, adminId: isAdmin ? userId : null },
     });
 
+    console.log(isAdmin);
+
     const cookieName = isAdmin ? 'admin_token' : 'accessToken';
     res.clearCookie(cookieName, {
       httpOnly: true,

@@ -81,7 +81,9 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const user = req.user as any;
-    return this.authService.logOutUser(res, user.id, user.userType === 'admin');
+    console.log(req.user);
+
+    return this.authService.logOutUser(res, user.id, user.type === 'admin');
   }
 
   @Get('check')

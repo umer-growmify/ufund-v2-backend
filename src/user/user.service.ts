@@ -55,19 +55,18 @@ export class UserService {
   }
 
   async getAllUsers() {
-    const users = await this.prisma.user.findMany({
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        status: true,
-        email: true,
-        countryCode: true,
-        phoneNumber: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
+    const users = await this.prisma.user.findMany();
+
+    if (users.length === 0) {
+      return {
+        success: true,
+        message: 'No users found',
+      };
+    }
+
+    if (!users) {
+      throw new NotFoundException('No users found');
+    }
 
     return {
       success: true,

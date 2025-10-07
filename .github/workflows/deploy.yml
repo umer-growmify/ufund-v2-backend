@@ -3,7 +3,7 @@ name: Deploy NestJS Backend
 on:
   push:
     branches:
-      - main
+      - main # deploy only when pushing to main
 
 jobs:
   deploy:
@@ -20,29 +20,8 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SERVER_PASS }}
           script: |
-            # Load user profile to get PATH and other environment variables
-            source ~/.bashrc || source ~/.profile || source ~/.bash_profile
-
             if [ -d ~/nest-backend/.git ]; then
-              echo "📦 Existing project found, pulling latest code..."
               cd ~/nest-backend && git pull origin main
-
-              echo "🔧 Rebuilding backend code..."
-              npm install
-              npm run build
-              pm2 restart all
             else
-              echo "🆕 First-time setup..."
               git clone git@github.com:Hammadabbasoffc/ufund-backend.git ~/nest-backend
               cd ~/nest-backend
-
-              echo "💾 Creating persistent Postgres volume..."
-              sudo docker volume create pgdata || true
-
-              echo "🚀 Starting Postgres container..."
-              sudo docker compose up -d
-
-              npm install
-              npm run build
-              pm2 start dist/main.js --name backend
-            fi

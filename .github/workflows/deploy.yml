@@ -24,21 +24,22 @@ jobs:
               echo "📦 Existing project found, pulling latest code..."
               cd ~/nest-backend && git pull origin main
 
-              echo "🔧 Rebuilding and restarting backend app..."
-              sudo docker compose build app
-              sudo docker compose up -d app
-
+              echo "🔧 Rebuilding backend code..."
+              npm install
+              npm run build
+              pm2 restart all  # or your own start command
             else
-              echo "🆕 First-time setup: cloning repository..."
+              echo "🆕 First-time setup..."
               git clone git@github.com:Hammadabbasoffc/ufund-backend.git ~/nest-backend
               cd ~/nest-backend
 
               echo "💾 Creating persistent Postgres volume..."
               sudo docker volume create pgdata || true
 
-              echo "🚀 Starting containers for the first time..."
-              sudo docker compose up --build -d
-            fi
+              echo "🚀 Starting Postgres container..."
+              sudo docker compose up -d
 
-            echo "🧹 Cleaning up old Docker images..."
-            sudo docker image prune -af || true
+              npm install
+              npm run build
+              pm2 start dist/main.js --name backend
+            fi

@@ -21,8 +21,24 @@ jobs:
           password: ${{ secrets.SERVER_PASS }}
           script: |
             if [ -d ~/nest-backend/.git ]; then
+              echo "📦 Existing project found, pulling latest code..."
               cd ~/nest-backend && git pull origin main
+
+              echo "🔧 Rebuilding and restarting backend app..."
+              sudo docker compose build app
+              sudo docker compose up -d app
+
             else
+              echo "🆕 First-time setup: cloning repository..."
               git clone git@github.com:Hammadabbasoffc/ufund-backend.git ~/nest-backend
               cd ~/nest-backend
 
+              echo "💾 Creating persistent Postgres volume..."
+              sudo docker volume create pgdata || true
+
+              echo "🚀 Starting containers for the first time..."
+              sudo docker compose up --build -d
+            fi
+
+            echo "🧹 Cleaning up old Docker images..."
+            sudo docker image prune -af || true

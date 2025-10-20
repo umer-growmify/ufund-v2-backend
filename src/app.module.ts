@@ -10,6 +10,8 @@ import { ProductsModule } from './products/products.module';
 import { AssetModule } from './asset/asset.module';
 import { AwsModule } from './aws/aws.module';
 import { UserModule } from './user/user.module';
+import { CampaignerModule } from './campaigner/campaigner.module';
+import { InvestorModule } from './investor/investor.module';
 
 @Module({
   imports: [
@@ -22,6 +24,8 @@ import { UserModule } from './user/user.module';
     AssetModule,
     AwsModule,
     UserModule,
+    CampaignerModule,
+    InvestorModule,
   ],
   controllers: [AppController],
   providers: [AppService],

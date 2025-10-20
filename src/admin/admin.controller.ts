@@ -1,5 +1,5 @@
 // src/admin/admin.controller.ts
-import { Controller, Post, Body, UseGuards, Res } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Res, Get } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { AuthService } from '../auth/auth.service';
 import { CreateAdminDto, AdminLoginDto } from './dto/admin.dto';
@@ -46,5 +46,18 @@ export class AdminController {
     @Res({ passthrough: true }) res: Response,
   ) {
     return this.authService.adminLogin(adminLoginDto, res);
+  }
+  @Get('admin-dashboard')
+  @Throttle({ default: { limit: 5, ttl: 60 } })
+  @Roles(AdminRoleType.SUPER_ADMIN)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiOperation({ summary: 'Admin dashboard (Super Admin only)' })
+  @ApiResponse({ status: 200, description: 'Admin dashboard data' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Requires SUPER_ADMIN role',
+  })
+  async adminDashboard() {
+    return this.adminService.adminDashboard();
   }
 }

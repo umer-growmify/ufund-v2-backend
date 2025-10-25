@@ -46,6 +46,8 @@ export class AwsService {
       );
     }
 
+    console.log(file, 'file in aws service');
+
     const key = `${folder}/${userId}/${Date.now()}-${file.originalname}`;
     const params = {
       Bucket: bucket,

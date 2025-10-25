@@ -27,6 +27,8 @@ export class ProfileService {
       where: { userId },
     });
 
+    console.log(file, 'file in service');
+
     if (!existingProfile) {
       // Upload file to S3 if provided
       let imageKey: string | undefined;
@@ -41,6 +43,8 @@ export class ProfileService {
         imageKey = key;
         imageUrl = url;
       }
+
+      console.log('Image Key:', imageKey);
 
       // Create new profile
       const userCreated = await this.prisma.profile.create({
@@ -129,30 +133,24 @@ export class ProfileService {
   }
 
   async getProfile(userId: string) {
-    const user = await this.prisma.profile.findUnique({
-      where: { userId },
+    console.log('Getting profile for user ID:', userId);
+
+    const user = await this.prisma.user.findFirst({
+      where: { id: userId },
       include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true,
-            phoneNumber: true,
-            countryCode: true,
-            roles: true,
-          },
-        },
+        profile: true,
       },
     });
+
+    console.log('user profile service ', user);
 
     if (!user) {
       throw new NotFoundException('Profile not found');
     }
 
     // Generate signed URL for image if imageKey exists
-    const imageUrl = user.imageKey
-      ? await this.awsService.getSignedUrl(user.imageKey)
+    const imageUrl = user.profile?.imageKey
+      ? await this.awsService.getSignedUrl(user.profile.imageKey)
       : null;
 
     return {

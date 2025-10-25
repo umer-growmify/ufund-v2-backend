@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   NotFoundException,
+  Param,
   Post,
   Put,
   Req,
@@ -17,7 +18,7 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { RoleType as Role } from '@prisma/client';
+import { AdminRoleType, RoleType as Role } from '@prisma/client';
 import { Roles } from 'src/auth/guards/roles.decorator';
 import { prfileFileConfig } from 'src/config/file-config';
 import { RequestWithUser } from 'src/types/types';
@@ -84,6 +85,39 @@ export class ProfileController {
     return this.profileService.updateProfileUser(userId, updateProfileUserDto);
   }
 
+  @Put('update-profile-user-by-admin/:id')
+  @ApiOperation({
+    summary: 'the admin will update the user in the profile page',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Profile created and updated successfully',
+  })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.investor, Role.campaigner)
+  async updateProfileUserByAdmin(
+    @Param('id') userId: string,
+    @Body() updateProfileUserDto: UpdateProfileUserDto,
+  ) {
+    return this.profileService.updateProfileUser(userId, updateProfileUserDto);
+  }
+
+  @Get('get-profile-by-id/:id')
+  @ApiOperation({ summary: 'Get profile by user ID (Investor, Campaigner)' })
+  @ApiResponse({ status: 200, description: 'Profile fetched successfully' })
+  @ApiResponse({ status: 404, description: 'Profile not found' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(AdminRoleType.SUPER_ADMIN)
+  async getProfileById(@Param('id') userId: string) {
+    const getProfile = await this.profileService.getProfile(userId);
+
+    if (!getProfile) {
+      throw new NotFoundException('Profile not found');
+    }
+
+    return getProfile;
+  }
+
   @Get('me')
   @ApiOperation({ summary: 'Get your own profile (Investor, Campaigner)' })
   @ApiResponse({ status: 200, description: 'Profile fetched successfully' })
@@ -140,9 +174,11 @@ export class ProfileController {
     @Body() body: UpdateProfileDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
+    console.log(
+      'body ###########################################################',
+      body,
+    );
 
-    console.log('body ###########################################################', body);
-    
     const userId = req.user.id;
     console.log('body ', body);
 

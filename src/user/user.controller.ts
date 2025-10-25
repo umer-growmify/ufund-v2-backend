@@ -4,7 +4,10 @@ import {
   Delete,
   Get,
   Param,
+  Post,
   Put,
+  Req,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
@@ -15,10 +18,12 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { Roles } from 'src/auth/guards/roles.decorator';
-import { AdminRoleType } from '@prisma/client';
+import { AdminRoleType, RoleType } from '@prisma/client';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { UpdateUserStatusDto } from './dto/user.dto';
+import { RequestWithUser } from 'src/types/types';
+import { Response } from 'express';
 
 @ApiTags('User')
 @ApiBearerAuth()
@@ -84,5 +89,25 @@ export class UserController {
   })
   async deteleUser(@Param('id') userId: string) {
     return this.userService.deteleUser(userId);
+  }
+
+  @Post('switch-user-role')
+  @ApiOperation({ summary: 'Switch user role (campaigner <-> investor)' })
+  @ApiResponse({ status: 200, description: 'User role switched successfully' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(RoleType.campaigner, RoleType.investor)
+  async switchUserRole(@Req() req: RequestWithUser, @Res() res: Response) {
+    console.log(req.user);
+    const userId = req.user.id;
+    const userRole = req.user.activeRole;
+
+    // Call the service method and pass the response object
+    const result = await this.userService.switchUserRole(userId, userRole, res);
+
+    console.log(result);
+
+    res.status(200).json(result);
+
+    // Send the res
   }
 }

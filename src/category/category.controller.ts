@@ -161,4 +161,38 @@ export class CategoryController {
   async getCategoryById(@Param('id') id: string) {
     return this.categoryService.getCategoryById(id);
   }
+
+  @Get('get-all-products-by-category/:id') // Fixed route definition
+  @ApiOperation({
+    summary:
+      'Get all products by category ID (SUPER_ADMIN, Campaigner, Investor)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'List of products for the specified category returned',
+  })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(AdminRoleType.SUPER_ADMIN, RoleType.campaigner, RoleType.investor)
+  async getAllProductsByCategoryId(
+    @Param('id') categoryId: string, // Extract the route parameter
+  ) {
+    return this.categoryService.getAllProductsByCategoryId(categoryId);
+  }
+
+  @Get('get-all-tokens-by-category/:id') // Fixed route definition
+  @ApiOperation({
+    summary:
+      'Get all tokens by category ID (SUPER_ADMIN, Campaigner, Investor)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'List of tokens for the specified category returned',
+  })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(AdminRoleType.SUPER_ADMIN, RoleType.campaigner, RoleType.investor)
+  async getAllTokensByCategoryId(
+    @Param('id') categoryId: string, // Extract the route parameter
+  ) {
+    return this.categoryService.getAllTokensByCategoryId(categoryId);
+  }
 }

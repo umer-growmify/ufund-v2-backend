@@ -395,4 +395,43 @@ export class CategoryService {
       throw new BadRequestException('Failed to retrieve category');
     }
   }
+
+  async getAllProductsByCategoryId(categoryId: string) {
+    try {
+      const products = await this.prisma.products.findMany({
+        where: { categoryId },
+      });
+
+      if (!products || products.length === 0) {
+        throw new NotFoundException('No products found for this category');
+      }
+
+      return {
+        success: true,
+        message: 'Products retrieved successfully',
+        data: products,
+      };
+    } catch (error) {
+      throw new BadRequestException(
+        'Failed to retrieve products for this category',
+      );
+    }
+  }
+
+  async getAllTokensByCategoryId(categoryId: string) {
+    const tokens = await this.prisma.asset.findMany({
+      where: { categoryId },
+    });
+
+    console.log(tokens.length);
+
+    if (!tokens || tokens.length === 0) {
+      throw new NotFoundException('No tokens found for this category');
+    }
+    return {
+      success: true,
+      message: 'Tokens retrieved successfully',
+      data: tokens,
+    };
+  }
 }

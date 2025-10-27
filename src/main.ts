@@ -8,7 +8,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.use(cookieParser());
-
+  console.log('CORS_ORIGIN:', process.env.CORS_ORIGIN);
   // ✅ Handle multiple origins (local + env)
   const allowedOrigins = [
     'http://localhost:3000',

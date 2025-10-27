@@ -406,16 +406,58 @@ export class CategoryService {
         throw new NotFoundException('No products found for this category');
       }
 
+      // Generate signed URLs for each product's images
+      const productsWithSignedUrls = await Promise.all(
+        products.map(async (product) => {
+          const signedUrls = await this.generateSignedUrlsForProduct(product);
+          return {
+            ...product,
+            signedUrls,
+          };
+        }),
+      );
+
       return {
         success: true,
         message: 'Products retrieved successfully',
-        data: products,
+        data: productsWithSignedUrls,
       };
     } catch (error) {
       throw new BadRequestException(
         'Failed to retrieve products for this category',
       );
     }
+  }
+
+  private async generateSignedUrlsForProduct(product: any) {
+    const imageKeys = [
+      'tokenImageKey',
+      'assetImageKey',
+      'imageOneKey',
+      'imageTwoKey',
+      'auditorsReportKey',
+      'documentKey',
+    ];
+
+    const signedUrls: Record<string, string | null> = {};
+
+    // Generate signed URLs for each image key that exists
+    for (const key of imageKeys) {
+      if (product[key]) {
+        try {
+          signedUrls[`${key}SignedUrl`] = await this.awsService.getSignedUrl(
+            product[key],
+          );
+        } catch (error) {
+          console.error(`Failed to generate signed URL for ${key}:`, error);
+          signedUrls[`${key}SignedUrl`] = null;
+        }
+      } else {
+        signedUrls[`${key}SignedUrl`] = null;
+      }
+    }
+
+    return signedUrls;
   }
 
   async getAllTokensByCategoryId(categoryId: string) {

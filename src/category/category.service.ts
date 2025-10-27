@@ -151,12 +151,12 @@ export class CategoryService {
       const categoriesWithCounts = await Promise.all(
         categories.map(async (category) => {
           // Get total products in this category
-          const totalProducts = await this.prisma.products.count({
+          const totalAssets = await this.prisma.asset.count({
             where: { categoryId: category.id },
           });
 
           // Get products created this month in this category
-          const monthlyProducts = await this.prisma.products.count({
+          const monthlyAssets = await this.prisma.asset.count({
             where: {
               categoryId: category.id,
               createdAt: {
@@ -189,8 +189,8 @@ export class CategoryService {
           return {
             ...category,
             imageUrl,
-            totalProducts,
-            monthlyProducts,
+            totalAssets,
+            monthlyAssets,
           };
         }),
       );

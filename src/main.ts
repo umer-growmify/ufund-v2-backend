@@ -7,8 +7,6 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  console.log("Hello this is the end")
-
   app.use(cookieParser());
   // ✅ Handle multiple origins (local + env)
   const allowedOrigins = [

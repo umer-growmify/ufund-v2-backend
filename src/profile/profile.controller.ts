@@ -94,12 +94,18 @@ export class ProfileController {
     description: 'Profile created and updated successfully',
   })
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.investor, Role.campaigner)
+  @Roles(AdminRoleType.SUPER_ADMIN)
+  @UseInterceptors(FileInterceptor('image'))
   async updateProfileUserByAdmin(
     @Param('id') userId: string,
-    @Body() updateProfileUserDto: UpdateProfileUserDto,
+    @Body() updateProfileDto: UpdateProfileDto,
+    @UploadedFile() file?: Express.Multer.File,
   ) {
-    return this.profileService.updateProfileUser(userId, updateProfileUserDto);
+    return this.profileService.updateCompleteProfile(
+      userId,
+      updateProfileDto,
+      file,
+    );
   }
 
   @Get('get-profile-by-id/:id')

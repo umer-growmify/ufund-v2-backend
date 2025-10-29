@@ -393,4 +393,142 @@ export class ProfileService {
       };
     }
   }
+
+  async updateCompleteProfile(
+    userId: string,
+    updateProfileDto: UpdateProfileDto,
+    file?: Express.Multer.File,
+  ) {
+    // Check if user exists
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { profile: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const { profile } = user;
+    const hasFileUpdate = !!file;
+    const hasDtoUpdate = Object.keys(updateProfileDto).length > 0;
+
+    if (!hasFileUpdate && !hasDtoUpdate) {
+      throw new BadRequestException(
+        'No changes detected for update operation.',
+      );
+    }
+
+    let imageKey: string | undefined;
+    let imageUrl: string | undefined;
+
+    // Handle file upload/update
+    if (hasFileUpdate) {
+      if (profile?.imageKey) {
+        // Update existing file
+        const result = await this.awsService.updateFile(file, profile.imageKey);
+        imageKey = result.key;
+        imageUrl = result.url;
+      } else {
+        // Upload new file
+        const result = await this.awsService.uploadFile(
+          file,
+          userId,
+          'profiles',
+        );
+        imageKey = result.key;
+        imageUrl = result.url;
+      }
+    }
+
+    // Prepare user data
+    const userData = {
+      email: updateProfileDto.email,
+      firstName: updateProfileDto.firstName,
+      lastName: updateProfileDto.lastName,
+      phoneNumber: updateProfileDto.phoneNumber,
+      countryCode: updateProfileDto.countryCode,
+    };
+
+    // Prepare profile data
+    const profileData: any = {
+      userAccountType: updateProfileDto.userAccountType,
+      incomeFrequency: updateProfileDto.incomeFrequency,
+      totalAnnualRevenue: updateProfileDto.totalAnnualRevenue,
+      addressLine1: updateProfileDto.addressLine1,
+      addressLine2: updateProfileDto.addressLine2,
+      zipCode: updateProfileDto.zipCode,
+      city: updateProfileDto.city,
+      state: updateProfileDto.state,
+      country: updateProfileDto.country,
+      companyName: updateProfileDto.companyName,
+      companyEmail: updateProfileDto.companyEmail,
+      companyTelephone: updateProfileDto.companyTelephone,
+      companyAddress: updateProfileDto.companyAddress,
+      bankName: updateProfileDto.bankName,
+      accountNumber: updateProfileDto.accountNumber,
+      accountName: updateProfileDto.accountName,
+      routingNumber: updateProfileDto.routingNumber,
+      ibanNumber: updateProfileDto.ibanNumber,
+      swiftNumber: updateProfileDto.swiftNumber,
+      bankAccountType: updateProfileDto.bankAccountType,
+      bankAddress: updateProfileDto.bankAddress,
+    };
+
+    // Add imageKey if we have a new image
+    if (imageKey) {
+      profileData.imageKey = imageKey;
+    }
+
+    // Use transaction for atomic updates
+    const [updatedUser, updatedOrCreatedProfile] =
+      await this.prisma.$transaction([
+        this.prisma.user.update({
+          where: { id: userId },
+          data: userData,
+        }),
+        profile
+          ? this.prisma.profile.update({
+              where: { userId },
+              data: profileData,
+            })
+          : this.prisma.profile.create({
+              data: {
+                userId,
+                ...profileData,
+              },
+            }),
+      ]);
+
+    // Get fresh data with relations
+    const freshProfile = await this.prisma.profile.findUnique({
+      where: { userId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            phoneNumber: true,
+            countryCode: true,
+            roles: true,
+          },
+        },
+      },
+    });
+
+    return {
+      success: true,
+      message: profile
+        ? 'Profile updated successfully'
+        : 'Profile created successfully',
+      data: freshProfile,
+      imageUrl:
+        imageUrl ||
+        (freshProfile?.imageKey
+          ? await this.awsService.getSignedUrl(freshProfile.imageKey)
+          : null),
+    };
+  }
 }

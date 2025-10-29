@@ -399,6 +399,8 @@ export class ProfileService {
     updateProfileDto: UpdateProfileDto,
     file?: Express.Multer.File,
   ) {
+    console.log('hello');
+
     // Check if user exists
     const user = await this.prisma.user.findUnique({
       where: { id: userId },

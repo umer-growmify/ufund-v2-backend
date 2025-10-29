@@ -399,7 +399,7 @@ export class ProfileService {
     updateProfileDto: UpdateProfileDto,
     file?: Express.Multer.File,
   ) {
-    console.log('hello');
+    console.log('updating the add');
 
     // Check if user exists
     const user = await this.prisma.user.findUnique({

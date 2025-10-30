@@ -11,6 +11,7 @@ import {
   EditProductDto,
   UpdateProductStatusDto,
 } from './dto/product.dto';
+import { PaginationDto, ProductFiltersDto } from './dto/product-filters.dto';
 
 @Injectable()
 export class ProductsService {
@@ -519,5 +520,160 @@ export class ProductsService {
       message: 'Product retrieved successfully',
       data: productWithSignedUrls,
     };
+  }
+
+  async getFilteredProducts(
+    filters: ProductFiltersDto,
+    pagination?: PaginationDto,
+  ) {
+    const {
+      categoryIds,
+      minPrice,
+      maxPrice,
+      offerStartDateFrom,
+      offerStartDateTo,
+      offerEndDateFrom,
+      offerEndDateTo,
+      maturityDateFrom,
+      maturityDateTo,
+      campaignerIds,
+      status,
+      riskScale,
+    } = filters;
+
+    const { skip = 0, take = 10 } = pagination || {};
+
+    // Build where clause dynamically
+    const where: any = {};
+
+    // Category filter
+    if (categoryIds && categoryIds.length > 0) {
+      where.categoryId = { in: categoryIds };
+    }
+
+    // Price range filter
+    if (minPrice !== undefined || maxPrice !== undefined) {
+      where.OR = [
+        {
+          productTotalValue: {
+            ...(minPrice !== undefined && { gte: minPrice }),
+            ...(maxPrice !== undefined && { lte: maxPrice }),
+          },
+        },
+        {
+          unitPrice: {
+            ...(minPrice !== undefined && { gte: minPrice.toString() }),
+            ...(maxPrice !== undefined && { lte: maxPrice.toString() }),
+          },
+        },
+      ];
+    }
+
+    // Offer date range filters
+    if (offerStartDateFrom || offerStartDateTo) {
+      where.offerStartDate = {
+        ...(offerStartDateFrom && { gte: new Date(offerStartDateFrom) }),
+        ...(offerStartDateTo && { lte: new Date(offerStartDateTo) }),
+      };
+    }
+
+    if (offerEndDateFrom || offerEndDateTo) {
+      where.offerEndDate = {
+        ...(offerEndDateFrom && { gte: new Date(offerEndDateFrom) }),
+        ...(offerEndDateTo && { lte: new Date(offerEndDateTo) }),
+      };
+    }
+
+    // Maturity date range filter
+    if (maturityDateFrom || maturityDateTo) {
+      where.maturityDate = {
+        ...(maturityDateFrom && { gte: new Date(maturityDateFrom) }),
+        ...(maturityDateTo && { lte: new Date(maturityDateTo) }),
+      };
+    }
+
+    // Campaigner filter
+    if (campaignerIds && campaignerIds.length > 0) {
+      where.campaignerId = { in: campaignerIds };
+    }
+
+    // Status filter
+    if (status) {
+      where.status = status;
+    }
+
+    // Risk scale filter
+    if (riskScale) {
+      where.riskScale = riskScale;
+    }
+
+    try {
+      // Execute query with pagination
+      const [products, totalCount] = await Promise.all([
+        this.prisma.products.findMany({
+          where,
+          skip,
+          take,
+          include: {
+            category: true,
+            campaigner: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+                phoneNumber: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+        }),
+        this.prisma.products.count({ where }),
+      ]);
+
+      // Generate signed URLs for each product
+      const productsWithSignedUrls = await Promise.all(
+        products.map(async (product) => ({
+          ...product,
+          auditorsReportUrl: product.auditorsReportKey
+            ? await this.awsService.getSignedUrl(product.auditorsReportKey)
+            : null,
+          documentUrl: product.documentKey
+            ? await this.awsService.getSignedUrl(product.documentKey)
+            : null,
+          tokenImageUrl: product.tokenImageKey
+            ? await this.awsService.getSignedUrl(product.tokenImageKey)
+            : null,
+          assetImageUrl: product.assetImageKey
+            ? await this.awsService.getSignedUrl(product.assetImageKey)
+            : null,
+          imageOneUrl: product.imageOneKey
+            ? await this.awsService.getSignedUrl(product.imageOneKey)
+            : null,
+          imageTwoUrl: product.imageTwoKey
+            ? await this.awsService.getSignedUrl(product.imageTwoKey)
+            : null,
+        })),
+      );
+
+      return {
+        success: true,
+        message: 'Filtered products retrieved successfully',
+        data: {
+          products: productsWithSignedUrls,
+          totalCount,
+          hasNextPage: skip + take < totalCount,
+          currentPage: Math.floor(skip / take) + 1,
+          totalPages: Math.ceil(totalCount / take),
+        },
+      };
+    } catch (error) {
+      console.error('Error fetching filtered products:', error);
+      throw new BadRequestException(
+        error.message || 'Failed to fetch filtered products',
+      );
+    }
   }
 }

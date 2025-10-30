@@ -12,6 +12,7 @@ import {
   UpdateAssetsStatusDto,
 } from './dto/asset.dto';
 import { AwsService } from 'src/aws/aws.service';
+import { AssetFiltersDto, AssetPaginationDto } from './dto/asset-filters.dto';
 
 @Injectable()
 export class AssetService {
@@ -748,6 +749,172 @@ export class AssetService {
       }
       console.error('Error fetching asset:', error);
       throw new BadRequestException('Failed to retrieve asset');
+    }
+  }
+
+  async getFilteredAssets(
+    filters: AssetFiltersDto,
+    pagination?: AssetPaginationDto,
+  ) {
+    const {
+      categoryIds,
+      assetTypeIds,
+      tokenTypeIds,
+      creatorIds,
+      minAssetValue,
+      maxAssetValue,
+      minTokenValue,
+      maxTokenValue,
+      offerStartDateFrom,
+      offerStartDateTo,
+      offerEndDateFrom,
+      offerEndDateTo,
+      rewardDateFrom,
+      rewardDateTo,
+      status,
+      riskScale,
+      network,
+    } = filters;
+
+    const { skip = 0, take = 10 } = pagination || {};
+
+    // Build where clause dynamically
+    const where: any = {};
+
+    // Category filter
+    if (categoryIds && categoryIds.length > 0) {
+      where.categoryId = { in: categoryIds };
+    }
+
+    // Asset type filter
+    if (assetTypeIds && assetTypeIds.length > 0) {
+      where.assetTypeId = { in: assetTypeIds };
+    }
+
+    // Token type filter
+    if (tokenTypeIds && tokenTypeIds.length > 0) {
+      where.tokenTypeId = { in: tokenTypeIds };
+    }
+
+    // Creator filter
+    if (creatorIds && creatorIds.length > 0) {
+      where.creatorId = { in: creatorIds };
+    }
+
+    // Asset value range filter
+    if (minAssetValue !== undefined || maxAssetValue !== undefined) {
+      where.assetValue = {
+        ...(minAssetValue !== undefined && { gte: minAssetValue }),
+        ...(maxAssetValue !== undefined && { lte: maxAssetValue }),
+      };
+    }
+
+    // Token value range filter
+    if (minTokenValue !== undefined || maxTokenValue !== undefined) {
+      where.tokenValue = {
+        ...(minTokenValue !== undefined && { gte: minTokenValue.toString() }),
+        ...(maxTokenValue !== undefined && { lte: maxTokenValue.toString() }),
+      };
+    }
+
+    // Offer date range filters
+    if (offerStartDateFrom || offerStartDateTo) {
+      where.offerStartDate = {
+        ...(offerStartDateFrom && { gte: new Date(offerStartDateFrom) }),
+        ...(offerStartDateTo && { lte: new Date(offerStartDateTo) }),
+      };
+    }
+
+    if (offerEndDateFrom || offerEndDateTo) {
+      where.offerEndDate = {
+        ...(offerEndDateFrom && { gte: new Date(offerEndDateFrom) }),
+        ...(offerEndDateTo && { lte: new Date(offerEndDateTo) }),
+      };
+    }
+
+    // Reward date range filter
+    if (rewardDateFrom || rewardDateTo) {
+      where.rewardDate = {
+        ...(rewardDateFrom && { gte: new Date(rewardDateFrom) }),
+        ...(rewardDateTo && { lte: new Date(rewardDateTo) }),
+      };
+    }
+
+    // Status filter
+    if (status) {
+      where.status = status;
+    }
+
+    // Risk scale filter
+    if (riskScale) {
+      where.riskScale = riskScale;
+    }
+
+    // Network filter
+    if (network) {
+      where.network = { contains: network, mode: 'insensitive' };
+    }
+
+    try {
+      // Execute query with pagination
+      const [assets, totalCount] = await Promise.all([
+        this.prisma.asset.findMany({
+          where,
+          skip,
+          take,
+          include: {
+            category: true,
+            assetType: true,
+            tokenType: true,
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+        }),
+        this.prisma.asset.count({ where }),
+      ]);
+
+      // Generate signed URLs for each asset
+      const assetsWithSignedUrls = await Promise.all(
+        assets.map(async (asset) => ({
+          ...asset,
+          auditorsReportUrl: asset.auditorsReportKey
+            ? await this.awsService.getSignedUrl(asset.auditorsReportKey)
+            : null,
+          documentUrl: asset.documentKey
+            ? await this.awsService.getSignedUrl(asset.documentKey)
+            : null,
+          productImageUrl: asset.productImageKey
+            ? await this.awsService.getSignedUrl(asset.productImageKey)
+            : null,
+          assetImageUrl: asset.assetImageKey
+            ? await this.awsService.getSignedUrl(asset.assetImageKey)
+            : null,
+          imageOneUrl: asset.imageOneKey
+            ? await this.awsService.getSignedUrl(asset.imageOneKey)
+            : null,
+          imageTwoUrl: asset.imageTwoKey
+            ? await this.awsService.getSignedUrl(asset.imageTwoKey)
+            : null,
+        })),
+      );
+
+      return {
+        success: true,
+        message: 'Filtered assets retrieved successfully',
+        data: {
+          assets: assetsWithSignedUrls,
+          totalCount,
+          hasNextPage: skip + take < totalCount,
+          currentPage: Math.floor(skip / take) + 1,
+          totalPages: Math.ceil(totalCount / take),
+        },
+      };
+    } catch (error) {
+      console.error('Error fetching filtered assets:', error);
+      throw new BadRequestException(
+        error.message || 'Failed to fetch filtered assets',
+      );
     }
   }
 }

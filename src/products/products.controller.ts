@@ -35,6 +35,7 @@ import {
 } from 'src/config/file-config';
 import { FileValidationInterceptor } from 'src/utils/file-validation.interceptor';
 import { Roles } from 'src/auth/guards/roles.decorator';
+import { GetFilteredProductsDto } from './dto/product-filters.dto';
 
 @ApiTags('Products')
 @ApiBearerAuth()
@@ -191,5 +192,22 @@ export class ProductsController {
   @Roles(AdminRoleType.SUPER_ADMIN, RoleType.campaigner, RoleType.investor)
   getProductById(@Param('id') id: string) {
     return this.productsService.getProductById(id);
+  }
+
+  @Post('filtered-products')
+  @ApiOperation({ summary: 'Get filtered products with pagination' })
+  @ApiResponse({
+    status: 200,
+    description: 'Filtered products returned successfully',
+  })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(AdminRoleType.SUPER_ADMIN, RoleType.campaigner, RoleType.investor)
+  async getFilteredProducts(
+    @Body() getFilteredProductsDto: GetFilteredProductsDto,
+  ) {
+    return this.productsService.getFilteredProducts(
+      getFilteredProductsDto.filters,
+      getFilteredProductsDto.pagination,
+    );
   }
 }

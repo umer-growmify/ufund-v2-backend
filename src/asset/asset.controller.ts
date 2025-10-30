@@ -30,6 +30,7 @@ import { Roles } from 'src/auth/guards/roles.decorator';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { FileValidationInterceptor } from 'src/utils/file-validation.interceptor';
 import { assetsFileConfig, editAssetFileConfig } from 'src/config/file-config';
+import { GetFilteredAssetsDto } from './dto/asset-filters.dto';
 
 @Controller('asset')
 export class AssetController {
@@ -321,5 +322,20 @@ export class AssetController {
   @ApiResponse({ status: 200, description: 'Asset fetched successfully' })
   async getAssetById(@Param('id') id: string) {
     return this.assetService.getAssetById(id);
+  }
+
+  @Post('filtered-assets')
+  @ApiOperation({ summary: 'Get filtered assets with pagination' })
+  @ApiResponse({
+    status: 200,
+    description: 'Filtered assets returned successfully',
+  })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(AdminRoleType.SUPER_ADMIN, RoleType.campaigner, RoleType.investor)
+  async getFilteredAssets(@Body() getFilteredAssetsDto: GetFilteredAssetsDto) {
+    return this.assetService.getFilteredAssets(
+      getFilteredAssetsDto.filters,
+      getFilteredAssetsDto.pagination,
+    );
   }
 }

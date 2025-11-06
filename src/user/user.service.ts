@@ -3,12 +3,12 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
+import { RoleType } from '@prisma/client';
+import * as crypto from 'crypto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateUserStatusDto } from './dto/user.dto';
-import { RoleType } from '@prisma/client';
-import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
-import { log } from 'console';
 
 @Injectable()
 export class UserService {
@@ -117,10 +117,6 @@ export class UserService {
     const hasCampaigner = userRoles.includes(RoleType.campaigner.toLowerCase());
     const hasInvestor = userRoles.includes(RoleType.investor.toLowerCase());
 
-    console.log('User Roles:', userRoles);
-    console.log('Has Campaigner:', hasCampaigner);
-    console.log('Has Investor:', hasInvestor);
-
     if (!hasCampaigner || !hasInvestor) {
       res.clearCookie('accessToken');
       res.clearCookie('refreshToken');
@@ -139,15 +135,6 @@ export class UserService {
       throw new BadRequestException(`Invalid current role: ${currentRole}`);
     }
 
-    // // Generate new JWT token
-    // const payload = {
-    //   id: user.id,
-    //   email: user.email,
-    //   activeRole: newRole,
-    //   type: 'user',
-    //   roles: user.roles,
-    // };
-
     const payload = {
       sub: user.id,
       email: user.email,
@@ -155,34 +142,57 @@ export class UserService {
       type: 'user',
     };
 
-    console.log('JWT Payload:', payload);
-
+    // Generate new access token
     const accessToken = this.jwtService.sign(payload, {
       secret: this.configService.get('JWT_SECRET'),
       expiresIn: this.configService.get('ACCESS_TOKEN_EXPIRY'),
     });
 
-    console.log('Generated Access Token:', accessToken);
+    // Generate new refresh token
+    const newRefreshToken = crypto.randomBytes(64).toString('hex');
 
-    // Clear old token and set new one
-    res.clearCookie('accessToken', {
-      httpOnly: true,
-      secure: this.configService.get('NODE_ENV') === 'production',
-      sameSite: 'strict',
-    });
+    // Delete old refresh tokens and create new one
+    await this.prisma.$transaction([
+      // Delete existing refresh tokens for this user
+      this.prisma.refreshToken.deleteMany({
+        where: { userId: user.id },
+      }),
+      // Create new refresh token
+      this.prisma.refreshToken.create({
+        data: {
+          token: newRefreshToken,
+          userId: user.id,
+          expiresAt: new Date(
+            Date.now() +
+              Number(
+                this.configService.get(
+                  'REFRESH_TOKEN_EXPIRY',
+                  7 * 24 * 60 * 60 * 1000,
+                ),
+              ),
+          ),
+        },
+      }),
+    ]);
 
-    console.log('Setting new access token cookie');
+    // Clear old tokens and set new ones
+    res.clearCookie('accessToken');
+    res.clearCookie('refreshToken');
 
+    // Set new cookies
     res.cookie('accessToken', accessToken, {
-      httpOnly: false,
-      secure: true,
+      httpOnly: false, // Consider true for better security
+      secure: this.configService.get('NODE_ENV') === 'production',
       sameSite: 'strict',
       maxAge: 15 * 60 * 1000,
     });
 
-    console.log('New access token cookie set successfully');
-
-    console.log('currentRole:', currentRole, 'newRole:', newRole);
+    res.cookie('refreshToken', newRefreshToken, {
+      httpOnly: true,
+      secure: this.configService.get('NODE_ENV') === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
 
     return {
       success: true,

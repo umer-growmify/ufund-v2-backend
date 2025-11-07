@@ -16,7 +16,7 @@ export class UserService {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-  ) {}
+  ) { }
   async getAllCampaigners() {
     const campaigners = await this.prisma.user.findMany({
       where: { roles: { has: 'campaigner' } }, // 👈 keep enum case consistent
@@ -166,18 +166,18 @@ export class UserService {
 
     // Clear old token and set new one
     res.clearCookie('accessToken', {
-      httpOnly: true,
+      httpOnly: false,
       secure: this.configService.get('NODE_ENV') === 'production',
-      sameSite: 'strict',
+      sameSite: 'lax',
     });
 
     console.log('Setting new access token cookie');
 
     res.cookie('accessToken', accessToken, {
       httpOnly: false,
-      secure: true,
-      sameSite: 'strict',
-      maxAge: 15 * 60 * 1000,
+      secure: this.configService.get('NODE_ENV') === 'production',
+      sameSite: 'lax',
+      maxAge: 1 * 60 * 1000,
     });
 
     console.log('New access token cookie set successfully');

@@ -29,7 +29,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
     private readonly authHelper: AuthHelperService,
-  ) {}
+  ) { }
 
   async registerUser(dto: RegisterDto) {
     const {
@@ -101,12 +101,12 @@ export class AuthService {
           userId: newUser.id,
           expiresAt: new Date(
             Date.now() +
-              Number(
-                this.configService.get(
-                  'REFRESH_TOKEN_EXPIRY',
-                  7 * 24 * 60 * 60 * 1000,
-                ),
+            Number(
+              this.configService.get(
+                'REFRESH_TOKEN_EXPIRY',
+                7 * 24 * 60 * 60 * 1000,
               ),
+            ),
           ),
         },
       });
@@ -167,12 +167,12 @@ export class AuthService {
         userId: user.id,
         expiresAt: new Date(
           Date.now() +
-            Number(
-              this.configService.get(
-                'REFRESH_TOKEN_EXPIRY',
-                7 * 24 * 60 * 60 * 1000,
-              ),
+          Number(
+            this.configService.get(
+              'REFRESH_TOKEN_EXPIRY',
+              7 * 24 * 60 * 60 * 1000,
             ),
+          ),
         ),
       },
     });
@@ -211,12 +211,12 @@ export class AuthService {
         adminId: admin.id,
         expiresAt: new Date(
           Date.now() +
-            Number(
-              this.configService.get(
-                'REFRESH_TOKEN_EXPIRY',
-                7 * 24 * 60 * 60 * 1000,
-              ),
+          Number(
+            this.configService.get(
+              'REFRESH_TOKEN_EXPIRY',
+              7 * 24 * 60 * 60 * 1000,
             ),
+          ),
         ),
       },
     });
@@ -314,12 +314,12 @@ export class AuthService {
           userId: user.id,
           expiresAt: new Date(
             Date.now() +
-              Number(
-                this.configService.get(
-                  'REFRESH_TOKEN_EXPIRY',
-                  7 * 24 * 60 * 60 * 1000,
-                ),
+            Number(
+              this.configService.get(
+                'REFRESH_TOKEN_EXPIRY',
+                7 * 24 * 60 * 60 * 1000,
               ),
+            ),
           ),
         },
       });
@@ -349,14 +349,14 @@ export class AuthService {
 
     const cookieName = isAdmin ? 'admin_token' : 'accessToken';
     res.clearCookie(cookieName, {
-      httpOnly: true,
+      httpOnly: false,
       secure: this.configService.get('NODE_ENV') === 'production',
-      sameSite: 'strict',
+      sameSite: 'lax',
     });
     res.clearCookie('refreshToken', {
       httpOnly: true,
       secure: this.configService.get('NODE_ENV') === 'production',
-      sameSite: 'strict',
+      sameSite: 'lax',
     });
 
     return { success: true, message: 'Logged out successfully' };
@@ -453,13 +453,13 @@ export class AuthService {
       // If not found, try to find a refresh token for an admin
       const adminToken = !userToken
         ? await prisma.refreshToken.findFirst({
-            where: {
-              token: refreshToken,
-              adminId: { not: null },
-              expiresAt: { gt: new Date() }, // Check expiration
-            },
-            include: { admin: true },
-          })
+          where: {
+            token: refreshToken,
+            adminId: { not: null },
+            expiresAt: { gt: new Date() }, // Check expiration
+          },
+          include: { admin: true },
+        })
         : null;
 
       if (userToken) {
@@ -472,20 +472,21 @@ export class AuthService {
         const { accessToken, refreshToken: newRefreshToken } =
           await this.generateTokens(userToken.user, activeRole);
 
-        // Delete old token and create new one
-        await prisma.refreshToken.delete({ where: { id: userToken.id } });
+
+        // Delete old token and create new one (use deleteMany to avoid errors if token was already removed)
+        await prisma.refreshToken.deleteMany({ where: { id: userToken.id } });
         await prisma.refreshToken.create({
           data: {
             token: newRefreshToken,
             userId: userToken.userId,
             expiresAt: new Date(
               Date.now() +
-                Number(
-                  this.configService.get(
-                    'REFRESH_TOKEN_EXPIRY',
-                    7 * 24 * 60 * 60 * 1000,
-                  ),
+              Number(
+                this.configService.get(
+                  'REFRESH_TOKEN_EXPIRY',
+                  7 * 24 * 60 * 60 * 1000,
                 ),
+              ),
             ),
           },
         });
@@ -515,20 +516,20 @@ export class AuthService {
         const { accessToken, refreshToken: newRefreshToken } =
           await this.generateTokens(adminToken.admin, adminToken.admin.role);
 
-        // Delete old token and create new one
-        await prisma.refreshToken.delete({ where: { id: adminToken.id } });
+        // Delete old token and create new one (use deleteMany to avoid errors if token was already removed)
+        await prisma.refreshToken.deleteMany({ where: { id: adminToken.id } });
         await prisma.refreshToken.create({
           data: {
             token: newRefreshToken,
             adminId: adminToken.adminId,
             expiresAt: new Date(
               Date.now() +
-                Number(
-                  this.configService.get(
-                    'REFRESH_TOKEN_EXPIRY',
-                    7 * 24 * 60 * 60 * 1000,
-                  ),
+              Number(
+                this.configService.get(
+                  'REFRESH_TOKEN_EXPIRY',
+                  7 * 24 * 60 * 60 * 1000,
                 ),
+              ),
             ),
           },
         });
@@ -569,7 +570,7 @@ export class AuthService {
 
     const accessTokenEx = this.configService.get<number>(
       'ACCESS_TOKEN_EXPIRY',
-      15 * 60,
+      1 * 60,
     ); // Use .env variable
 
     const accessToken = await this.generateJwt(payload, accessTokenEx);

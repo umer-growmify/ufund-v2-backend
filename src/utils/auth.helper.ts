@@ -13,7 +13,7 @@ export class AuthHelperService {
   constructor(
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
-  ) {}
+  ) { }
 
   async sendVerificationEmail(
     email: string,
@@ -80,13 +80,13 @@ export class AuthHelperService {
     activeRole: RoleType | AdminRoleType,
     tokens: { accessToken: string; refreshToken: string; cookieName?: string },
   ) {
-    const { accessToken, refreshToken, cookieName = 'accessToken' } = tokens;
+    const { accessToken, refreshToken } = tokens;
 
-    res.cookie(cookieName, accessToken, {
+    res.cookie('accessToken', accessToken, {
       httpOnly: false,
-      secure: true,
-      sameSite: 'strict',
-      maxAge: 15 * 60 * 1000, // 15 minutes
+      secure: this.configService.get('NODE_ENV') === 'production',
+      sameSite: 'lax',
+      maxAge: 1 * 60 * 1000, // 1 minutes
     });
 
     const defaultExpiry = 7 * 24 * 60 * 60 * 1000;
@@ -104,9 +104,10 @@ export class AuthHelperService {
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
+      secure: this.configService.get('NODE_ENV') === 'production',
+      sameSite: 'lax',
       maxAge: rememberMe ? refreshTokenExpiry : 24 * 60 * 60 * 1000,
+      path: '/api/v1/auth/refresh'
     });
 
     return {

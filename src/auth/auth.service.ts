@@ -435,7 +435,11 @@ export class AuthService {
     };
   }
 
-  async refreshToken(refreshToken: string, res: Response) {
+  async refreshToken(
+    refreshToken: string,
+    activeRole: RoleType | AdminRoleType,
+    res: Response,
+  ) {
     console.log('refreshToken', refreshToken);
 
     return this.prisma.$transaction(async (prisma) => {
@@ -468,7 +472,8 @@ export class AuthService {
           throw new UnauthorizedException('User not found for refresh token');
         }
 
-        const activeRole = userToken.user.roles[0];
+        console.log('Token is here ...........', userToken.user);
+
         const { accessToken, refreshToken: newRefreshToken } =
           await this.generateTokens(userToken.user, activeRole);
 

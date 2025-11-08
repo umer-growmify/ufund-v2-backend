@@ -20,12 +20,15 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
-import { RoleType } from '@prisma/client';
+import { AdminRoleType, RoleType } from '@prisma/client';
 import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { AdminLoginDto, LoginDto, RegisterDto } from './dto/auth.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
+import { Roles } from './guards/roles.decorator';
+import { Role } from 'generated/prisma';
+import { RequestWithUser } from 'src/types/types';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -122,14 +125,19 @@ export class AuthController {
 
   @Post('refresh')
   @Throttle({ default: { limit: 5, ttl: 60 } })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(AdminRoleType.SUPER_ADMIN, Role.investor, Role.campaigner)
   @ApiOperation({ summary: 'Refresh access token using refresh token' })
   @ApiResponse({ status: 200, description: 'Token refreshed successfully' })
   @ApiResponse({ status: 401, description: 'Invalid or expired refresh token' })
   async refresh(
-    @Req() req: Request,
+    // @Req() req: Request,
+    @Req() req: RequestWithUser,
     @Res({ passthrough: true }) res: Response,
   ) {
-    console.log('Refreshing token...', req);
+    console.log('Refreshing token...', req.user.activeRole);
+
+    const activeRole = req.user.activeRole;
 
     const refreshToken = req?.cookies?.refreshToken;
 
@@ -137,7 +145,7 @@ export class AuthController {
       console.log('No refresh token found in cookies');
     }
 
-    return this.authService.refreshToken(refreshToken, res);
+    return this.authService.refreshToken(refreshToken, activeRole, res);
   }
 
   @Get('google')

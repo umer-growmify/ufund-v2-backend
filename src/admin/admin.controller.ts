@@ -33,20 +33,20 @@ export class AdminController {
     return this.adminService.createAdmin(createAdminDto);
   }
 
-  @Post('login')
-  @Throttle({ default: { limit: 5, ttl: 60 } })
-  @ApiOperation({ summary: 'Admin login with email and password' })
-  @ApiResponse({ status: 201, description: 'Admin login successful' })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized - Invalid credentials',
-  })
-  async login(
-    @Body() adminLoginDto: AdminLoginDto,
-    @Res({ passthrough: true }) res: Response,
-  ) {
-    return this.authService.adminLogin(adminLoginDto, res);
-  }
+  // @Post('login')
+  // @Throttle({ default: { limit: 5, ttl: 60 } })
+  // @ApiOperation({ summary: 'Admin login with email and password' })
+  // @ApiResponse({ status: 201, description: 'Admin login successful' })
+  // @ApiResponse({
+  //   status: 401,
+  //   description: 'Unauthorized - Invalid credentials',
+  // })
+  // async login(
+  //   @Body() adminLoginDto: AdminLoginDto,
+  //   @Res({ passthrough: true }) res: Response,
+  // ) {
+  //   return this.authService.adminLogin(adminLoginDto, res);
+  // }
   @Get('admin-dashboard')
   @Throttle({ default: { limit: 5, ttl: 60 } })
   @Roles(AdminRoleType.SUPER_ADMIN)

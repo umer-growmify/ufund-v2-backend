@@ -6,9 +6,9 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import * as bcrypt from 'bcryptjs';
+import bcrypt from 'bcryptjs';
 import { Response } from 'express';
-import * as crypto from 'crypto';
+import crypto from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   LoginDto,
@@ -17,7 +17,7 @@ import {
   AdminLoginDto,
 } from './dto/auth.dto';
 import { ConfigService } from '@nestjs/config';
-import * as jwt from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import { RoleType, AdminRoleType } from '@prisma/client';
 import { AuthHelperService } from 'src/utils/auth.helper';
 

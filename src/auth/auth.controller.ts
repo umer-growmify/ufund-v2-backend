@@ -60,20 +60,20 @@ export class AuthController {
     return this.authService.loginUser(dto, res);
   }
 
-  // @Post('admin/login')
-  // @Throttle({ default: { limit: 5, ttl: 60 } })
-  // @ApiOperation({ summary: 'Admin login with email and password' })
-  // @ApiResponse({ status: 201, description: 'Admin login successful' })
-  // @ApiResponse({
-  //   status: 401,
-  //   description: 'Unauthorized - Invalid credentials',
-  // })
-  // async adminLogin(
-  //   @Body() dto: AdminLoginDto,
-  //   @Res({ passthrough: true }) res: Response,
-  // ) {
-  //   return this.authService.adminLogin(dto, res);
-  // }
+  @Post('admin/login')
+  @Throttle({ default: { limit: 5, ttl: 60 } })
+  @ApiOperation({ summary: 'Admin login with email and password' })
+  @ApiResponse({ status: 201, description: 'Admin login successful' })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid credentials',
+  })
+  async adminLogin(
+    @Body() dto: AdminLoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return this.authService.adminLogin(dto, res);
+  }
 
   @Post('logout')
   @UseGuards(JwtAuthGuard, RolesGuard)

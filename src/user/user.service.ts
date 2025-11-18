@@ -6,7 +6,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { RoleType } from '@prisma/client';
-import * as crypto from 'crypto';
+import crypto from 'crypto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateUserStatusDto } from './dto/user.dto';
 
@@ -16,7 +16,7 @@ export class UserService {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-  ) { }
+  ) {}
   async getAllCampaigners() {
     const campaigners = await this.prisma.user.findMany({
       where: { roles: { has: 'campaigner' } }, // 👈 keep enum case consistent
@@ -157,7 +157,7 @@ export class UserService {
       secure: this.configService.get('NODE_ENV') === 'production',
       sameSite: 'lax',
     });
-    
+
     // Delete old refresh tokens and create new one
     await this.prisma.$transaction([
       // Delete existing refresh tokens for this user

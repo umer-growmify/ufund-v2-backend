@@ -48,7 +48,7 @@ export class AuthService {
       !roles ||
       !roles.every((role) => Object.values(RoleType).includes(role))
     ) {
-      throw new BadRequestException('Invalid role(s) provided');
+      throw new BadRequestException('Invalid role(s)  provided');
     }
 
     const passwordRegex =

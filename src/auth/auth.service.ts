@@ -574,7 +574,7 @@ export class AuthService {
 
     const accessTokenEx = this.configService.get<number>(
       'ACCESS_TOKEN_EXPIRY',
-      15 * 60,
+      15 * 60 * 1000,
     ); // Use .env variable
 
     const accessToken = await this.generateJwt(payload, accessTokenEx);

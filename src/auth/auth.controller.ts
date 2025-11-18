@@ -27,7 +27,6 @@ import { AdminLoginDto, LoginDto, RegisterDto } from './dto/auth.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { Roles } from './guards/roles.decorator';
-import { Role } from 'generated/prisma';
 import { RequestWithUser } from 'src/types/types';
 
 @ApiTags('Auth')
@@ -126,7 +125,7 @@ export class AuthController {
   @Post('refresh')
   @Throttle({ default: { limit: 5, ttl: 60 } })
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(AdminRoleType.SUPER_ADMIN, Role.investor, Role.campaigner)
+  @Roles(AdminRoleType.SUPER_ADMIN, RoleType.investor, RoleType.campaigner)
   @ApiOperation({ summary: 'Refresh access token using refresh token' })
   @ApiResponse({ status: 200, description: 'Token refreshed successfully' })
   @ApiResponse({ status: 401, description: 'Invalid or expired refresh token' })

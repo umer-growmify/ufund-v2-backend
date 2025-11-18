@@ -48,7 +48,7 @@ export class AuthController {
   @Post('login')
   @Throttle({ default: { limit: 5, ttl: 60 } })
   @ApiOperation({ summary: 'User login with email and password' })
-  @ApiResponse({ status: 201, description: 'Login  successful with JWT token' })
+  @ApiResponse({ status: 201, description: 'Login successful with JWT token' })
   @ApiResponse({
     status: 401,
     description: 'Unauthorized - Invalid credentials',

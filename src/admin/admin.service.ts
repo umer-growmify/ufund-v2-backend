@@ -3,7 +3,7 @@ import {
   Injectable,
   BadRequestException,
 } from '@nestjs/common';
-import bcrypt from 'bcryptjs';
+import * as bcrypt from 'bcryptjs';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateAdminDto } from './dto/admin.dto';
 

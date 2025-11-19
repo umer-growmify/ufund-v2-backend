@@ -82,12 +82,12 @@ export class AuthHelperService {
   ) {
     const { accessToken, refreshToken } = tokens;
 
-    res.cookie('accessToken', accessToken, {
-      httpOnly: false,
-      secure: this.configService.get('NODE_ENV') === 'production',
-      sameSite: 'lax',
-      maxAge: 15 * 60 * 1000, // 1 minutes
-    });
+    // res.cookie('accessToken', accessToken, {
+    //   httpOnly: false,
+    //   secure: this.configService.get('NODE_ENV') === 'production',
+    //   sameSite: 'lax',
+    //   maxAge: 15 * 60 * 1000, // 1 minutes
+    // });
 
     const defaultExpiry = 7 * 24 * 60 * 60 * 1000;
     const refreshTokenExpiryStr = this.configService.get(

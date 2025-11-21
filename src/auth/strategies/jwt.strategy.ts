@@ -29,7 +29,13 @@
 //   async validate(payload: JwtPayload) {
 //     console.log('JwtStrategy - JWT Payload:', payload);
 
-//     if (!payload || !payload.sub || !payload.email || !payload.role || !payload.type) {
+//     if (
+//       !payload ||
+//       !payload.sub ||
+//       !payload.email ||
+//       !payload.role ||
+//       !payload.type
+//     ) {
 //       console.error('JwtStrategy - Invalid payload:', payload);
 //       throw new UnauthorizedException('Invalid token payload');
 //     }
@@ -69,19 +75,19 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   async validate(payload: JwtPayload) {
     if (
       !payload ||
-      !payload.sub ||
-      !payload.email ||
-      !payload.role ||
-      !payload.type
+      // !payload.sub ||
+      // !payload.email ||
+      !payload.role
+      // !payload.type
     ) {
       throw new UnauthorizedException('Invalid token payload');
     }
 
     return {
-      id: payload.sub,
-      email: payload.email,
+      // id: payload.sub,
+      // email: payload.email,
       activeRole: payload.role,
-      type: payload.type,
+      // type: payload.type,
     };
   }
 }

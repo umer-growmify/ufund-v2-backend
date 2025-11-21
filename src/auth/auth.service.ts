@@ -440,7 +440,7 @@ export class AuthService {
     activeRole: RoleType | AdminRoleType,
     res: Response,
   ) {
-    console.log('refreshToken', refreshToken);
+    console.log('refreshToken ', refreshToken);
 
     return this.prisma.$transaction(async (prisma) => {
       // First, try to find a refresh token for a user

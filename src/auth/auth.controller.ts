@@ -124,7 +124,7 @@ export class AuthController {
 
   @Post('refresh')
   @Throttle({ default: { limit: 5, ttl: 60 } })
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(AdminRoleType.SUPER_ADMIN, RoleType.investor, RoleType.campaigner)
   @ApiOperation({ summary: 'Refresh access token using refresh token' })
   @ApiResponse({ status: 200, description: 'Token refreshed successfully' })

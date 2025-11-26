@@ -86,7 +86,7 @@ export class AuthHelperService {
       httpOnly: false,
       secure: this.configService.get('NODE_ENV') === 'production',
       sameSite: 'lax',
-      maxAge: 15 * 60 * 1000, // 1 minutes
+      maxAge: 5 * 60 * 1000, // 1 minutes
     });
 
     const defaultExpiry = 7 * 24 * 60 * 60 * 1000;

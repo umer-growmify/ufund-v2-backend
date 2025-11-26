@@ -124,7 +124,7 @@ export class AuthController {
 
   @Post('refresh')
   @Throttle({ default: { limit: 5, ttl: 60 } })
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  // @UseGuards(RolesGuard)
   @Roles(AdminRoleType.SUPER_ADMIN, RoleType.investor, RoleType.campaigner)
   @ApiOperation({ summary: 'Refresh access token using refresh token' })
   @ApiResponse({ status: 200, description: 'Token refreshed successfully' })
@@ -134,9 +134,9 @@ export class AuthController {
     @Req() req: RequestWithUser,
     @Res({ passthrough: true }) res: Response,
   ) {
-    console.log('Refreshing token...', req.user.activeRole);
+    // console.log('Refreshing token...', req.user.activeRole);
 
-    const activeRole = req.user.activeRole;
+    // const activeRole = req.user.activeRole;
 
     const refreshToken = req?.cookies?.refreshToken;
 
@@ -144,7 +144,7 @@ export class AuthController {
       console.log('No refresh token found in cookies');
     }
 
-    return this.authService.refreshToken(refreshToken, activeRole, res);
+    return this.authService.refreshToken(refreshToken, res);
   }
 
   @Get('google')

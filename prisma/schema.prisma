@@ -4,6 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -133,41 +134,22 @@ model Products {
   category            Category? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 }
 
-model Product { 
+model Product {
+  id                 String   @id @default(uuid())
+  name               String
+  description        String?
+  sku                String?
+  brand              String?
+  images             String[]
+  categoryId         String?
+  tags               String[]
+  interestRate       Float?
+  interestMethod     String?
+  interestPeriodDays Int?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
 
-  id          String   @id @default(uuid()) 
-
-  name        String 
-
-  description String? 
-
-  sku         String? 
-
-  brand       String? 
-
-  images      String[] 
-
-  categoryId  String? 
-
-  tags        String[] 
-
- 
-
-  // Crowdfunding only 
-
-  interestRate       Float?   // annualized or period-based, FIAT return 
-
-  interestMethod     String?  // SIMPLE_INTEREST or COMPOUND 
-
-  interestPeriodDays Int?     // e.g. 30/90/180/365 
-
- 
-
-  createdAt   DateTime @default(now()) 
-
-  updatedAt   DateTime @updatedAt 
-
-} 
 model Asset {
   id                String    @id @default(uuid())
   assetName         String
@@ -206,14 +188,15 @@ model Asset {
 }
 
 model RefreshToken {
-  id        String   @id @default(uuid())
-  token     String   @unique
-  userId    String?
-  adminId   String?
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-  admin     Admin?   @relation(fields: [adminId], references: [id])
-  user      User?    @relation(fields: [userId], references: [id])
+  id         String     @id @default(uuid())
+  token      String     @unique
+  userId     String?
+  adminId    String?
+  expiresAt  DateTime
+  createdAt  DateTime   @default(now())
+  activeRole RoleType[]
+  admin      Admin?     @relation(fields: [adminId], references: [id])
+  user       User?      @relation(fields: [userId], references: [id])
 }
 
 enum RoleType {

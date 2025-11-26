@@ -94,22 +94,22 @@ export class AuthService {
         },
       });
 
-      const refreshToken = crypto.randomBytes(64).toString('hex');
-      await prisma.refreshToken.create({
-        data: {
-          token: refreshToken,
-          userId: newUser.id,
-          expiresAt: new Date(
-            Date.now() +
-              Number(
-                this.configService.get(
-                  'REFRESH_TOKEN_EXPIRY',
-                  7 * 24 * 60 * 60 * 1000,
-                ),
-              ),
-          ),
-        },
-      });
+      // const refreshToken = crypto.randomBytes(64).toString('hex');
+      // await prisma.refreshToken.create({
+      //   data: {
+      //     token: refreshToken,
+      //     userId: newUser.id,
+      //     expiresAt: new Date(
+      //       Date.now() +
+      //         Number(
+      //           this.configService.get(
+      //             'REFRESH_TOKEN_EXPIRY',
+      //             7 * 24 * 60 * 60 * 1000,
+      //           ),
+      //         ),
+      //     ),
+      //   },
+      // });
 
       return newUser;
     });
@@ -160,11 +160,13 @@ export class AuthService {
       user,
       activeRole,
     );
-
+    // Delete old token and create new one (use deleteMany to avoid errors if token was already removed)
+    await this.prisma.refreshToken.deleteMany({ where: { userId: user.id } });
     await this.prisma.refreshToken.create({
       data: {
         token: refreshToken,
         userId: user.id,
+        activeRole: [activeRole],
         expiresAt: new Date(
           Date.now() +
             Number(
@@ -204,11 +206,13 @@ export class AuthService {
       admin,
       admin.role,
     );
-
+    const activeRole = admin.role;
+    await this.prisma.refreshToken.deleteMany({ where: { userId: admin.id } });
     await this.prisma.refreshToken.create({
       data: {
         token: refreshToken,
         adminId: admin.id,
+        activeRole: [activeRole as RoleType],
         expiresAt: new Date(
           Date.now() +
             Number(
@@ -437,7 +441,7 @@ export class AuthService {
 
   async refreshToken(
     refreshToken: string,
-    activeRole: RoleType | AdminRoleType,
+    // activeRole: RoleType | AdminRoleType,
     res: Response,
   ) {
     console.log('refreshToken ', refreshToken);
@@ -475,14 +479,15 @@ export class AuthService {
         console.log('Token is here ...........', userToken.user);
 
         const { accessToken, refreshToken: newRefreshToken } =
-          await this.generateTokens(userToken.user, activeRole);
-
+          await this.generateTokens(userToken.user, userToken.activeRole[0]);
+        const activeRole = userToken.activeRole[0];
         // Delete old token and create new one (use deleteMany to avoid errors if token was already removed)
         await prisma.refreshToken.deleteMany({ where: { id: userToken.id } });
         await prisma.refreshToken.create({
           data: {
             token: newRefreshToken,
             userId: userToken.userId,
+            activeRole: [activeRole as RoleType],
             expiresAt: new Date(
               Date.now() +
                 Number(
@@ -519,13 +524,14 @@ export class AuthService {
 
         const { accessToken, refreshToken: newRefreshToken } =
           await this.generateTokens(adminToken.admin, adminToken.admin.role);
-
+        const activeRole = adminToken.admin.role;
         // Delete old token and create new one (use deleteMany to avoid errors if token was already removed)
         await prisma.refreshToken.deleteMany({ where: { id: adminToken.id } });
         await prisma.refreshToken.create({
           data: {
             token: newRefreshToken,
             adminId: adminToken.adminId,
+            activeRole: [activeRole as RoleType],
             expiresAt: new Date(
               Date.now() +
                 Number(
@@ -574,7 +580,7 @@ export class AuthService {
 
     const accessTokenEx = this.configService.get<number>(
       'ACCESS_TOKEN_EXPIRY',
-      15 * 60 * 1000,
+      5 * 60 * 1000,
     ); // Use .env variable
 
     const accessToken = await this.generateJwt(payload, accessTokenEx);

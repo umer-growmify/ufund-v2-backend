@@ -1,32 +1,32 @@
 -- CreateEnum
-CREATE TYPE "public"."RoleType" AS ENUM ('investor', 'campaigner');
+CREATE TYPE "RoleType" AS ENUM ('investor', 'campaigner');
 
 -- CreateEnum
-CREATE TYPE "public"."UserAccountType" AS ENUM ('INDIVIDUAL', 'MULTIPLE', 'CORPORATE');
+CREATE TYPE "UserAccountType" AS ENUM ('INDIVIDUAL', 'MULTIPLE', 'CORPORATE');
 
 -- CreateEnum
-CREATE TYPE "public"."IncomeFrequencyType" AS ENUM ('DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY');
+CREATE TYPE "IncomeFrequencyType" AS ENUM ('DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY');
 
 -- CreateEnum
-CREATE TYPE "public"."BankAccountType" AS ENUM ('PERSONAL', 'NON_PERSONAL', 'OTHER');
+CREATE TYPE "BankAccountType" AS ENUM ('PERSONAL', 'NON_PERSONAL', 'OTHER');
 
 -- CreateEnum
-CREATE TYPE "public"."AdminRoleType" AS ENUM ('SUPER_ADMIN', 'NOTIFICATION_COMMUNICATION', 'KYC_COMPLIANCE', 'PRODUCT_CROWDFUNDING', 'TOKEN_MANAGEMENT', 'FINANCE');
+CREATE TYPE "AdminRoleType" AS ENUM ('SUPER_ADMIN', 'NOTIFICATION_COMMUNICATION', 'KYC_COMPLIANCE', 'PRODUCT_CROWDFUNDING', 'TOKEN_MANAGEMENT', 'FINANCE');
 
 -- CreateEnum
-CREATE TYPE "public"."CategoryType" AS ENUM ('PRODUCT', 'TOKEN');
+CREATE TYPE "CategoryType" AS ENUM ('PRODUCT', 'TOKEN');
 
 -- CreateEnum
-CREATE TYPE "public"."RiskScale" AS ENUM ('LOW', 'MEDIUM', 'HIGH');
+CREATE TYPE "RiskScale" AS ENUM ('LOW', 'MEDIUM', 'HIGH');
 
 -- CreateEnum
-CREATE TYPE "public"."Status" AS ENUM ('PENDING', 'LIVE', 'SOLD', 'REJECTED');
+CREATE TYPE "Status" AS ENUM ('PENDING', 'LIVE', 'SOLD', 'REJECTED');
 
 -- CreateEnum
-CREATE TYPE "public"."UserStatus" AS ENUM ('PENDING', 'APPROVED', 'REJECTED');
+CREATE TYPE "UserStatus" AS ENUM ('PENDING', 'APPROVED', 'REJECTED');
 
 -- CreateTable
-CREATE TABLE "public"."User" (
+CREATE TABLE "User" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "firstName" TEXT NOT NULL,
@@ -34,7 +34,7 @@ CREATE TABLE "public"."User" (
     "phoneNumber" TEXT,
     "countryCode" TEXT,
     "password" TEXT,
-    "roles" "public"."RoleType"[],
+    "roles" "RoleType"[],
     "agreedToTerms" BOOLEAN NOT NULL,
     "isVerified" BOOLEAN NOT NULL DEFAULT false,
     "verificationToken" TEXT,
@@ -42,17 +42,17 @@ CREATE TABLE "public"."User" (
     "providerId" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "status" "public"."UserStatus" NOT NULL DEFAULT 'PENDING',
+    "status" "UserStatus" NOT NULL DEFAULT 'PENDING',
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "public"."Profile" (
+CREATE TABLE "Profile" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
-    "userAccountType" "public"."UserAccountType" NOT NULL DEFAULT 'INDIVIDUAL',
-    "incomeFrequency" "public"."IncomeFrequencyType" NOT NULL DEFAULT 'MONTHLY',
+    "userAccountType" "UserAccountType" NOT NULL DEFAULT 'INDIVIDUAL',
+    "incomeFrequency" "IncomeFrequencyType" NOT NULL DEFAULT 'MONTHLY',
     "totalAnnualRevenue" DOUBLE PRECISION NOT NULL DEFAULT 0.0,
     "addressLine1" TEXT NOT NULL,
     "addressLine2" TEXT,
@@ -70,7 +70,7 @@ CREATE TABLE "public"."Profile" (
     "routingNumber" TEXT NOT NULL,
     "ibanNumber" TEXT NOT NULL,
     "swiftNumber" TEXT NOT NULL,
-    "bankAccountType" "public"."BankAccountType" NOT NULL DEFAULT 'PERSONAL',
+    "bankAccountType" "BankAccountType" NOT NULL DEFAULT 'PERSONAL',
     "bankAddress" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -80,12 +80,12 @@ CREATE TABLE "public"."Profile" (
 );
 
 -- CreateTable
-CREATE TABLE "public"."Admin" (
+CREATE TABLE "Admin" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "password" TEXT NOT NULL,
-    "role" "public"."AdminRoleType" NOT NULL,
+    "role" "AdminRoleType" NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -93,11 +93,11 @@ CREATE TABLE "public"."Admin" (
 );
 
 -- CreateTable
-CREATE TABLE "public"."Category" (
+CREATE TABLE "Category" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "imageUrl" TEXT,
-    "categoryType" "public"."CategoryType" NOT NULL,
+    "categoryType" "CategoryType" NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "block" BOOLEAN NOT NULL DEFAULT false,
@@ -106,7 +106,7 @@ CREATE TABLE "public"."Category" (
 );
 
 -- CreateTable
-CREATE TABLE "public"."AssetType" (
+CREATE TABLE "AssetType" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -116,7 +116,7 @@ CREATE TABLE "public"."AssetType" (
 );
 
 -- CreateTable
-CREATE TABLE "public"."TokenType" (
+CREATE TABLE "TokenType" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -126,7 +126,7 @@ CREATE TABLE "public"."TokenType" (
 );
 
 -- CreateTable
-CREATE TABLE "public"."Products" (
+CREATE TABLE "Products" (
     "id" TEXT NOT NULL,
     "productName" TEXT NOT NULL,
     "brand" TEXT NOT NULL,
@@ -141,7 +141,7 @@ CREATE TABLE "public"."Products" (
     "unitPrice" TEXT,
     "productTotalValue" DOUBLE PRECISION,
     "description" TEXT NOT NULL,
-    "riskScale" "public"."RiskScale" NOT NULL,
+    "riskScale" "RiskScale" NOT NULL,
     "offerStartDate" TIMESTAMP(3) NOT NULL,
     "offerEndDate" TIMESTAMP(3) NOT NULL,
     "investmentStartDate" TIMESTAMP(3) NOT NULL,
@@ -157,13 +157,32 @@ CREATE TABLE "public"."Products" (
     "imageOneKey" TEXT,
     "imageTwoKey" TEXT,
     "tokenImageKey" TEXT,
-    "status" "public"."Status" NOT NULL DEFAULT 'PENDING',
+    "status" "Status" NOT NULL DEFAULT 'PENDING',
 
     CONSTRAINT "Products_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "public"."Asset" (
+CREATE TABLE "Product" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+    "sku" TEXT,
+    "brand" TEXT,
+    "images" TEXT[],
+    "categoryId" TEXT,
+    "tags" TEXT[],
+    "interestRate" DOUBLE PRECISION,
+    "interestMethod" TEXT,
+    "interestPeriodDays" INTEGER,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Product_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Asset" (
     "id" TEXT NOT NULL,
     "assetName" TEXT NOT NULL,
     "tokenName" TEXT NOT NULL,
@@ -180,7 +199,7 @@ CREATE TABLE "public"."Asset" (
     "offerStartDate" TIMESTAMP(3) NOT NULL,
     "offerEndDate" TIMESTAMP(3) NOT NULL,
     "rewardDate" TIMESTAMP(3),
-    "riskScale" "public"."RiskScale" NOT NULL,
+    "riskScale" "RiskScale" NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "creatorId" TEXT,
@@ -194,13 +213,13 @@ CREATE TABLE "public"."Asset" (
     "network" TEXT,
     "productImageKey" TEXT,
     "reward" TEXT,
-    "status" "public"."Status" NOT NULL DEFAULT 'PENDING',
+    "status" "Status" NOT NULL DEFAULT 'PENDING',
 
     CONSTRAINT "Asset_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "public"."RefreshToken" (
+CREATE TABLE "RefreshToken" (
     "id" TEXT NOT NULL,
     "token" TEXT NOT NULL,
     "userId" TEXT,
@@ -212,46 +231,46 @@ CREATE TABLE "public"."RefreshToken" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "User_email_key" ON "public"."User"("email");
+CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Profile_userId_key" ON "public"."Profile"("userId");
+CREATE UNIQUE INDEX "Profile_userId_key" ON "Profile"("userId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Admin_email_key" ON "public"."Admin"("email");
+CREATE UNIQUE INDEX "Admin_email_key" ON "Admin"("email");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Category_name_key" ON "public"."Category"("name");
+CREATE UNIQUE INDEX "Category_name_key" ON "Category"("name");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "AssetType_name_key" ON "public"."AssetType"("name");
+CREATE UNIQUE INDEX "AssetType_name_key" ON "AssetType"("name");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "TokenType_name_key" ON "public"."TokenType"("name");
+CREATE UNIQUE INDEX "TokenType_name_key" ON "TokenType"("name");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "RefreshToken_token_key" ON "public"."RefreshToken"("token");
+CREATE UNIQUE INDEX "RefreshToken_token_key" ON "RefreshToken"("token");
 
 -- AddForeignKey
-ALTER TABLE "public"."Profile" ADD CONSTRAINT "Profile_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Profile" ADD CONSTRAINT "Profile_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "public"."Products" ADD CONSTRAINT "Products_campaignerId_fkey" FOREIGN KEY ("campaignerId") REFERENCES "public"."User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Products" ADD CONSTRAINT "Products_campaignerId_fkey" FOREIGN KEY ("campaignerId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "public"."Products" ADD CONSTRAINT "Products_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "public"."Category"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Products" ADD CONSTRAINT "Products_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "Category"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "public"."Asset" ADD CONSTRAINT "Asset_assetTypeId_fkey" FOREIGN KEY ("assetTypeId") REFERENCES "public"."AssetType"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Asset" ADD CONSTRAINT "Asset_assetTypeId_fkey" FOREIGN KEY ("assetTypeId") REFERENCES "AssetType"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "public"."Asset" ADD CONSTRAINT "Asset_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "public"."Category"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Asset" ADD CONSTRAINT "Asset_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "Category"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "public"."Asset" ADD CONSTRAINT "Asset_tokenTypeId_fkey" FOREIGN KEY ("tokenTypeId") REFERENCES "public"."TokenType"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Asset" ADD CONSTRAINT "Asset_tokenTypeId_fkey" FOREIGN KEY ("tokenTypeId") REFERENCES "TokenType"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "public"."RefreshToken" ADD CONSTRAINT "RefreshToken_adminId_fkey" FOREIGN KEY ("adminId") REFERENCES "public"."Admin"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "RefreshToken" ADD CONSTRAINT "RefreshToken_adminId_fkey" FOREIGN KEY ("adminId") REFERENCES "Admin"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "public"."RefreshToken" ADD CONSTRAINT "RefreshToken_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "RefreshToken" ADD CONSTRAINT "RefreshToken_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;

@@ -93,24 +93,6 @@ export class AuthService {
           verificationToken,
         },
       });
-
-      // const refreshToken = crypto.randomBytes(64).toString('hex');
-      // await prisma.refreshToken.create({
-      //   data: {
-      //     token: refreshToken,
-      //     userId: newUser.id,
-      //     expiresAt: new Date(
-      //       Date.now() +
-      //         Number(
-      //           this.configService.get(
-      //             'REFRESH_TOKEN_EXPIRY',
-      //             7 * 24 * 60 * 60 * 1000,
-      //           ),
-      //         ),
-      //     ),
-      //   },
-      // });
-
       return newUser;
     });
 
@@ -133,16 +115,24 @@ export class AuthService {
     if (!Object.values(RoleType).includes(activeRole)) {
       throw new BadRequestException('Invalid role provided');
     }
-
     const user = await this.prisma.user.findUnique({ where: { email } });
-
-    console.log('User:', user);
-
     if (!user || !user.isVerified || !user.password) {
       throw new UnauthorizedException(
         'Invalid credentials or unverified email',
       );
     }
+    const isInvestor = user.roles.includes(RoleType.investor);
+    // const isCampaigner = user.roles.includes(RoleType.campaigner);
+    if (isInvestor && activeRole === RoleType.campaigner) {
+      return {
+        success: false,
+        reason: 'REQUEST_SECOND_ROLE',
+        message: 'You can become a campaigner. Select type.',
+        options: ['INDIVIDUAL', 'COMPANY'],
+      };
+    }
+
+    console.log('User:', user);
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
@@ -206,13 +196,13 @@ export class AuthService {
       admin,
       admin.role,
     );
-    const activeRole = admin.role;
+    const adminActiveRole = admin.role;
     await this.prisma.refreshToken.deleteMany({ where: { userId: admin.id } });
     await this.prisma.refreshToken.create({
       data: {
         token: refreshToken,
         adminId: admin.id,
-        activeRole: [activeRole as RoleType],
+        adminActiveRole: [adminActiveRole],
         expiresAt: new Date(
           Date.now() +
             Number(

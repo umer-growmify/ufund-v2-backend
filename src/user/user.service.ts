@@ -8,7 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import { RoleType } from '@prisma/client';
 import crypto from 'crypto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { UpdateUserStatusDto } from './dto/user.dto';
+import { RequestRoleDto, UpdateUserStatusDto } from './dto/user.dto';
 
 @Injectable()
 export class UserService {
@@ -205,6 +205,58 @@ export class UserService {
       success: true,
       message: 'User role switched successfully',
       newRole: newRole,
+    };
+  }
+
+  async requestRole(userId: string, dto: RequestRoleDto) {
+    const { role, actingAs } = dto;
+
+    // Only campaigner onboarding is allowed
+    if (role !== RoleType.campaigner) {
+      throw new BadRequestException('Only CAMPAIGNER role can be requested.');
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found.');
+    }
+
+    // If user already has campaigner role, do not allow second onboarding
+    if (user.roles.includes(RoleType.campaigner)) {
+      throw new BadRequestException('User is already a campaigner.');
+    }
+
+    // Create an onboarding request entry
+    const onboardingRequest = await this.prisma.onboardingRequest.create({
+      data: {
+        userId,
+        requestedRole: RoleType.campaigner,
+        actingAs,
+        status:
+          actingAs === 'INDIVIDUAL' ? 'INDIVIDUAL_PENDING' : 'COMPANY_REQUIRED',
+      },
+    });
+
+    // Response for individual onboarding
+    if (actingAs === 'INDIVIDUAL') {
+      return {
+        success: true,
+        onboardingStatus: 'INDIVIDUAL_PENDING',
+        message: 'Individual campaigner onboarding started.',
+        onboardingRequest,
+      };
+    }
+
+    // Response for company onboarding
+    return {
+      success: true,
+      onboardingStatus: 'COMPANY_REQUIRED',
+      nextStep: 'CREATE_COMPANY',
+      message: 'Please create your company.',
+      onboardingRequest,
     };
   }
 }

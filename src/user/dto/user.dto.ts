@@ -1,3 +1,4 @@
+import { RoleType } from '@prisma/client';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsNotEmpty, IsString } from 'class-validator';
 
@@ -16,4 +17,12 @@ export class UpdateUserStatusDto {
   @IsString()
   @IsNotEmpty()
   status: UpdateUserStatus;
+}
+
+export class RequestRoleDto {
+  @IsEnum(RoleType)
+  role: RoleType; // must be CAMPAIGNER
+
+  @IsString()
+  actingAs: 'INDIVIDUAL' | 'COMPANY';
 }

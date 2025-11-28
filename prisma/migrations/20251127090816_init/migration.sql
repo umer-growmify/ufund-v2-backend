@@ -226,6 +226,8 @@ CREATE TABLE "RefreshToken" (
     "adminId" TEXT,
     "expiresAt" TIMESTAMP(3) NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "activeRole" "RoleType"[],
+    "adminActiveRole" "AdminRoleType"[],
 
     CONSTRAINT "RefreshToken_pkey" PRIMARY KEY ("id")
 );

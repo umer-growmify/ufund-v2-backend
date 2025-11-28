@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   Post,
+  Patch,
   Put,
   Req,
   Res,
@@ -21,7 +22,7 @@ import { Roles } from 'src/auth/guards/roles.decorator';
 import { AdminRoleType, RoleType } from '@prisma/client';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
-import { UpdateUserStatusDto } from './dto/user.dto';
+import { RequestRoleDto, UpdateUserStatusDto } from './dto/user.dto';
 import { RequestWithUser } from 'src/types/types';
 import { Response } from 'express';
 
@@ -42,6 +43,12 @@ export class UserController {
   })
   async getAllCampaigners() {
     return this.userService.getAllCampaigners();
+  }
+
+  // secondrole request
+  @Patch('/:id/request-role')
+  async requestRole(@Param('id') userId: string, @Body() dto: RequestRoleDto) {
+    return this.userService.requestRole(userId, dto);
   }
 
   // pdate user status

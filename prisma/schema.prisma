@@ -8,25 +8,36 @@ datasource db {
 }
 
 model User {
-  id                String         @id @default(uuid())
-  email             String         @unique
-  firstName         String
-  lastName          String
-  phoneNumber       String?
-  countryCode       String?
-  password          String?
-  roles             RoleType[]
-  agreedToTerms     Boolean
-  isVerified        Boolean        @default(false)
-  verificationToken String?
-  provider          String?
-  providerId        String?
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
-  status            UserStatus     @default(PENDING)
-  Products          Products[]
-  profile           Profile?
-  refreshTokens     RefreshToken[]
+  id                 String              @id @default(uuid())
+  email              String              @unique
+  firstName          String
+  lastName           String
+  phoneNumber        String?
+  countryCode        String?
+  password           String?
+  roles              RoleType[]
+  agreedToTerms      Boolean
+  isVerified         Boolean             @default(false)
+  verificationToken  String?
+  provider           String?
+  providerId         String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  status             UserStatus          @default(PENDING)
+  onboardingRequests OnboardingRequest[]
+  Products           Products[]
+  profile            Profile?
+  refreshTokens      RefreshToken[]
+}
+
+model OnboardingRequest {
+  id            String   @id @default(uuid())
+  userId        String
+  requestedRole RoleType
+  actingAs      String
+  status        String
+  createdAt     DateTime @default(now())
+  user          User     @relation(fields: [userId], references: [id])
 }
 
 model Profile {
@@ -188,15 +199,16 @@ model Asset {
 }
 
 model RefreshToken {
-  id         String     @id @default(uuid())
-  token      String     @unique
-  userId     String?
-  adminId    String?
-  expiresAt  DateTime
-  createdAt  DateTime   @default(now())
-  activeRole RoleType[]
-  admin      Admin?     @relation(fields: [adminId], references: [id])
-  user       User?      @relation(fields: [userId], references: [id])
+  id              String          @id @default(uuid())
+  token           String          @unique
+  userId          String?
+  adminId         String?
+  expiresAt       DateTime
+  createdAt       DateTime        @default(now())
+  activeRole      RoleType[]
+  adminActiveRole AdminRoleType[]
+  admin           Admin?          @relation(fields: [adminId], references: [id])
+  user            User?           @relation(fields: [userId], references: [id])
 }
 
 enum RoleType {

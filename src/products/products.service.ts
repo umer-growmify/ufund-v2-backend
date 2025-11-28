@@ -189,8 +189,8 @@ export class ProductsService {
       }),
     );
 
-    const getSingleProductUrl = await this.getProductSignedUrls(products[0].id);
-    console.log('Single Product URL: ', getSingleProductUrl);
+    // const getSingleProductUrl = await this.getProductSignedUrls(products[0].id);
+    // console.log('Single Product URL: ', getSingleProductUrl);
 
     console.log('Products with URLs: ', productsWithSignedUrls);
 

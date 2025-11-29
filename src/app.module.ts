@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config'; 
+import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
@@ -12,12 +12,12 @@ import { AwsModule } from './aws/aws.module';
 import { UserModule } from './user/user.module';
 import { CampaignerModule } from './campaigner/campaigner.module';
 import { InvestorModule } from './investor/investor.module';
-import { CompanyModule } from './company/company.module';
-import { CompanyModule } from './company/company.module';
+// import { CompanyModule } from './company/company.module';
+// import { CompanyModule } from './company/company.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }), 
+    ConfigModule.forRoot({ isGlobal: true }),
     AuthModule,
     ProfileModule,
     AdminModule,
@@ -28,7 +28,7 @@ import { CompanyModule } from './company/company.module';
     UserModule,
     CampaignerModule,
     InvestorModule,
-    CompanyModule,
+    // CompanyModule,
   ],
   controllers: [AppController],
   providers: [AppService],

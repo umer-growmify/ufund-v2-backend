@@ -169,6 +169,7 @@ export class UserService {
         data: {
           token: newRefreshToken,
           userId: user.id,
+          activeRole: [newRole],
           expiresAt: new Date(
             Date.now() +
               Number(
@@ -242,6 +243,12 @@ export class UserService {
 
     // Response for individual onboarding
     if (actingAs === 'INDIVIDUAL') {
+      const activeRole = RoleType.campaigner;
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { roles: { set: [...user.roles, activeRole] } },
+      });
+      // }
       return {
         success: true,
         onboardingStatus: 'INDIVIDUAL_PENDING',

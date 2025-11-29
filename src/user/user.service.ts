@@ -227,7 +227,7 @@ export class UserService {
 
     // If user already has campaigner role, do not allow second onboarding
     if (user.roles.includes(RoleType.campaigner)) {
-      throw new BadRequestException('User is already a campaigner.');
+      throw new BadRequestException('User is Already a campaigner.');
     }
 
     // Create an onboarding request entry

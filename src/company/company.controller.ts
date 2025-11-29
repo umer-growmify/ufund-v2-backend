@@ -24,7 +24,7 @@ export class CompanyController {
   @Post()
   @Roles(RoleType.campaigner)
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @ApiOperation({ summary: 'Create company' })
+  @ApiOperation({ summary: 'Create Company' })
   create(@Body() createCompanyDto: CreateCompanyDto) {
     return this.companyService.create(createCompanyDto);
   }

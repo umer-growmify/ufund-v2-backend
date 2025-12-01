@@ -131,6 +131,7 @@ export class AuthService {
     //     options: ['INDIVIDUAL', 'COMPANY'],
     //   };
     // }
+    //
 
     console.log('User:', user);
 

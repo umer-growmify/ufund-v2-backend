@@ -1,26 +1,32 @@
 import { Injectable } from '@nestjs/common';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class CompanyService {
-  create(createCompanyDto: CreateCompanyDto) {
-    return 'This action adds a new company';
-  }
+  constructor(private prisma: PrismaService) {}
 
-  findAll() {
-    return `This action returns all company`;
-  }
+  async create(dto: CreateCompanyDto) {
+    const { ownerUserId, ...companyData } = dto;
 
-  findOne(id: number) {
-    return `This action returns a #${id} company`;
-  }
+    // 1. Create the company
+    const company = await this.prisma.company.create({
+      data: {
+        ...companyData,
+        verificationStatus: 'PENDING',
+      },
+    });
 
-  update(id: number, updateCompanyDto: UpdateCompanyDto) {
-    return `This action updates a #${id} company`;
-  }
+    // 2. Add UserCompany relation with role OWNER
+    await this.prisma.userCompany.create({
+      data: {
+        userId: ownerUserId,
+        companyId: company.id,
+        role: 'OWNER',
+      },
+    });
 
-  remove(id: number) {
-    return `This action removes a #${id} company`;
+    return company;
   }
 }

@@ -28,6 +28,7 @@ model User {
   Products           Products[]
   profile            Profile?
   refreshTokens      RefreshToken[]
+  userCompanies      UserCompany[]
 }
 
 model OnboardingRequest {
@@ -211,9 +212,32 @@ model RefreshToken {
   user            User?           @relation(fields: [userId], references: [id])
 }
 
+model Company {
+  id                 String             @id @default(uuid())
+  name               String
+  registrationNumber String?
+  address            String?
+  country            String?
+  documents          Json?
+  verificationStatus VerificationStatus @default(PENDING)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  userCompanies      UserCompany[]
+}
+
+model UserCompany {
+  id        String      @id @default(uuid())
+  userId    String
+  companyId String
+  role      CompanyRole
+  company   Company     @relation(fields: [companyId], references: [id])
+  user      User        @relation(fields: [userId], references: [id])
+}
+
 enum RoleType {
   investor
   campaigner
+  both
 }
 
 enum UserAccountType {
@@ -263,6 +287,17 @@ enum Status {
 }
 
 enum UserStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum CompanyRole {
+  OWNER
+  MEMBER
+}
+
+enum VerificationStatus {
   PENDING
   APPROVED
   REJECTED

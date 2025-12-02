@@ -12,8 +12,8 @@ import { AwsModule } from './aws/aws.module';
 import { UserModule } from './user/user.module';
 import { CampaignerModule } from './campaigner/campaigner.module';
 import { InvestorModule } from './investor/investor.module';
-// import { CompanyModule } from './company/company.module';
-// import { CompanyModule } from './company/company.module';
+
+import { CompanyModule } from './company/company.module';
 
 @Module({
   imports: [
@@ -28,7 +28,7 @@ import { InvestorModule } from './investor/investor.module';
     UserModule,
     CampaignerModule,
     InvestorModule,
-    // CompanyModule,
+    CompanyModule,
   ],
   controllers: [AppController],
   providers: [AppService],

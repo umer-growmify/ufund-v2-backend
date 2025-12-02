@@ -86,6 +86,7 @@ export class AuthHelperService {
       httpOnly: false,
       secure: this.configService.get('NODE_ENV') === 'production',
       sameSite: 'lax',
+      domain: 'dev-nextjs.ufund.online',
       maxAge: 5 * 60 * 1000, // 1 minutes
     });
 

@@ -121,16 +121,16 @@ export class AuthService {
         'Invalid credentials or unverified email',
       );
     }
-    // const isInvestor = user.roles.includes(RoleType.investor);
-    // // const isCampaigner = user.roles.includes(RoleType.campaigner);
-    // if (isInvestor && activeRole === RoleType.campaigner) {
-    //   return {
-    //     success: false,
-    //     reason: 'REQUEST_SECOND_ROLE',
-    //     message: 'You can become a campaigner. Select type.',
-    //     options: ['INDIVIDUAL', 'COMPANY'],
-    //   };
-    // }
+    const isInvestor = user.roles.includes(RoleType.investor);
+    // const isCampaigner = user.roles.includes(RoleType.campaigner);
+    if (isInvestor && activeRole === RoleType.campaigner) {
+      return {
+        success: false,
+        reason: 'REQUEST_SECOND_ROLE',
+        message: 'You can become a campaigner. Select type.',
+        options: ['INDIVIDUAL', 'COMPANY'],
+      };
+    }
 
     console.log('User:', user);
 

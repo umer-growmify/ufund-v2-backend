@@ -107,7 +107,7 @@ export class AuthHelperService {
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: this.configService.get('NODE_ENV') === 'production',
-      sameSite: 'strict',
+      sameSite: 'none',
       maxAge: rememberMe ? refreshTokenExpiry : 24 * 60 * 60 * 1000,
       path: '/api/v1/auth/refresh',
     });

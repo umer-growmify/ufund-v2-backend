@@ -350,7 +350,7 @@ export class AuthService {
     res.clearCookie('refreshToken', {
       httpOnly: true,
       secure: this.configService.get('NODE_ENV') === 'production',
-      sameSite: 'strict',
+      sameSite: 'none',
     });
 
     return { success: true, message: 'Logged out successfully' };

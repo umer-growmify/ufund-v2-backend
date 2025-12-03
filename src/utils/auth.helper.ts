@@ -84,8 +84,8 @@ export class AuthHelperService {
 
     res.cookie('accessToken', accessToken, {
       httpOnly: false,
-      // secure: this.configService.get('NODE_ENV') === 'production',
-      secure: true,
+      secure: this.configService.get('NODE_ENV') === 'production',
+      // secure: true,
       sameSite: 'none',
       domain: '.ufund.online',
       maxAge: 5 * 60 * 1000, // 15 minutes

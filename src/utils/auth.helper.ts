@@ -85,8 +85,8 @@ export class AuthHelperService {
     res.cookie('accessToken', accessToken, {
       httpOnly: false,
       secure: this.configService.get('NODE_ENV') === 'production',
-      sameSite: 'lax',
-
+      sameSite: 'none',
+      domain: 'dev-nextjs.ufund.online',
       maxAge: 5 * 60 * 1000, // 15 minutes
     });
 

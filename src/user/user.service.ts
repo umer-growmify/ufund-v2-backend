@@ -155,7 +155,7 @@ export class UserService {
     res.clearCookie('accessToken', {
       httpOnly: false,
       secure: this.configService.get('NODE_ENV') === 'production',
-      sameSite: 'lax',
+      sameSite: 'none',
     });
 
     // Delete old refresh tokens and create new one
@@ -191,7 +191,7 @@ export class UserService {
     res.cookie('accessToken', accessToken, {
       httpOnly: false, // Consider true for better security
       secure: this.configService.get('NODE_ENV') === 'production',
-      sameSite: 'lax',
+      sameSite: 'none',
       maxAge: 15 * 60 * 1000,
     });
 

@@ -352,6 +352,7 @@ export class AuthService {
       httpOnly: true,
       secure: this.configService.get('NODE_ENV') === 'production',
       sameSite: 'none',
+      path: '/api/v1/auth/refresh',
     });
 
     return { success: true, message: 'Logged out successfully' };

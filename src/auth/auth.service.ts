@@ -345,12 +345,12 @@ export class AuthService {
     res.clearCookie(cookieName, {
       httpOnly: false,
       secure: this.configService.get('NODE_ENV') === 'production',
-      sameSite: 'lax',
+      sameSite: 'none',
     });
     res.clearCookie('refreshToken', {
       httpOnly: true,
       secure: this.configService.get('NODE_ENV') === 'production',
-      sameSite: 'lax',
+      sameSite: 'strict',
     });
 
     return { success: true, message: 'Logged out successfully' };
@@ -570,7 +570,7 @@ export class AuthService {
 
     const accessTokenEx = this.configService.get<number>(
       'ACCESS_TOKEN_EXPIRY',
-      5 * 60 * 1000,
+      2 * 60 * 1000,
     ); // Use .env variable
 
     const accessToken = await this.generateJwt(payload, accessTokenEx);

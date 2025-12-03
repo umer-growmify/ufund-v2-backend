@@ -192,7 +192,7 @@ export class UserService {
       httpOnly: false, // Consider true for better security
       secure: this.configService.get('NODE_ENV') === 'production',
       sameSite: 'none',
-      maxAge: 15 * 60 * 1000,
+      maxAge: 2 * 60 * 1000,
     });
 
     res.cookie('refreshToken', newRefreshToken, {

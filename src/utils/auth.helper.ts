@@ -88,7 +88,7 @@ export class AuthHelperService {
       // secure: true,
       sameSite: 'none',
       domain: '.ufund.online',
-      maxAge: 5 * 60 * 1000, // 15 minutes
+      maxAge: 2 * 60 * 1000, // 5 minutes
     });
 
     const defaultExpiry = 7 * 24 * 60 * 60 * 1000;

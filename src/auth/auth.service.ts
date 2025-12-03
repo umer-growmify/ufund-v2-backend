@@ -345,6 +345,7 @@ export class AuthService {
     res.clearCookie(cookieName, {
       httpOnly: false,
       secure: this.configService.get('NODE_ENV') === 'production',
+      domain: '.ufund.online',
       sameSite: 'none',
     });
     res.clearCookie('refreshToken', {

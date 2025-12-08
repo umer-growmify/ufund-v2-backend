@@ -234,6 +234,43 @@ model UserCompany {
   user      User        @relation(fields: [userId], references: [id])
 }
 
+model EmailTemplate {
+  id           String   @id @default(cuid())
+  templateId   String   @unique
+  name         String
+  description  String?
+  subject      String
+  html         String
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  htmlFileName String
+}
+
+model EmailLog {
+  id                String      @id @default(cuid())
+  to                String
+  cc                String?
+  bcc               String?
+  templateId        String
+  variables         Json
+  status            EmailStatus @default(PENDING)
+  errorMessage      String?
+  providerMessageId String?
+  userId            String?
+  eventId           String?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+}
+
+enum EmailStatus {
+  PENDING
+  SENT
+  DELIVERED
+  BOUNCED
+  FAILED
+}
+
 enum RoleType {
   investor
   campaigner

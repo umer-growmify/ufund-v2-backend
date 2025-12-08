@@ -4,9 +4,10 @@ import { CampaignerController } from './campaigner.controller';
 import { AuthModule } from 'src/auth/auth.module';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { AuthHelperService } from 'src/utils/auth.helper';
+import { EmailModule } from 'src/email/email.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule],
+  imports: [PrismaModule, AuthModule, EmailModule],
   controllers: [CampaignerController],
   providers: [CampaignerService],
   exports: [CampaignerService],

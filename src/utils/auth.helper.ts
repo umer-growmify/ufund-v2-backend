@@ -1,5 +1,5 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { Response } from 'express';
+import e, { Response } from 'express';
 import * as Mailgen from 'mailgen';
 import * as nodemailer from 'nodemailer';
 import { ConfigService } from '@nestjs/config';
@@ -7,64 +7,86 @@ import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
 import { RoleType, AdminRoleType } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { EmailService } from 'src/email/email.service';
 
 @Injectable()
 export class AuthHelperService {
   constructor(
+    private readonly emailService: EmailService,
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
   ) {}
 
+  // async sendVerificationEmail(
+  //   email: string,
+  //   token: string,
+  //   firstName?: string,
+  //   lastName?: string,
+  // ): Promise<void> {
+  //   const transporter = nodemailer.createTransport({
+  //     host: this.configService.get('MAILTRAP_HOST'),
+  //     port: Number(this.configService.get('MAILTRAP_PORT')),
+  //     auth: {
+  //       user: this.configService.get('MAILTRAP_USERNAME'),
+  //       pass: this.configService.get('MAILTRAP_PASSWORD'),
+  //     },
+  //   });
+
+  //   const mailGenerator = new Mailgen({
+  //     theme: 'default',
+  //     product: {
+  //       name: 'uFund',
+  //       link: this.configService.get('BASE_URL') || 'http://localhost:3000',
+  //       copyright: `© ${new Date().getFullYear()} uFund. All rights reserved.`,
+  //     },
+  //   });
+
+  //   const emailBody = mailGenerator.generate({
+  //     body: {
+  //       name: firstName || email.split('@')[0],
+  //       intro: [
+  //         'Welcome to uFund!',
+  //         'One Platform to Power Your Investment Journey!',
+  //       ],
+  //       action: {
+  //         instructions:
+  //           'To get started with uFund, please confirm your account:',
+  //         button: {
+  //           color: '#22BC66',
+  //           text: 'Verify Your Email',
+  //           link: `${this.configService.get('BASE_URL')}/api/v1/auth/verify/${token}`,
+  //         },
+  //       },
+  //       outro:
+  //         'If you did not sign up for uFund, you can safely ignore this email.',
+  //     },
+  //   });
+
+  //   await transporter.sendMail({
+  //     from: this.configService.get('MAILTRAP_SENDEREMAIL'),
+  //     to: email,
+  //     subject: 'Welcome to uFund! Confirm Your Email',
+  //     html: emailBody,
+  //   });
+  // }
   async sendVerificationEmail(
     email: string,
     token: string,
     firstName?: string,
     lastName?: string,
   ): Promise<void> {
-    const transporter = nodemailer.createTransport({
-      host: this.configService.get('MAILTRAP_HOST'),
-      port: Number(this.configService.get('MAILTRAP_PORT')),
-      auth: {
-        user: this.configService.get('MAILTRAP_USERNAME'),
-        pass: this.configService.get('MAILTRAP_PASSWORD'),
-      },
-    });
+    const verifyUrl = `${this.configService.get('BASE_URL')}/api/v1/auth/verify/${token}`;
+    console.log('verifyUrl:', verifyUrl);
 
-    const mailGenerator = new Mailgen({
-      theme: 'default',
-      product: {
-        name: 'uFund',
-        link: this.configService.get('BASE_URL') || 'http://localhost:3000',
-        copyright: `© ${new Date().getFullYear()} uFund. All rights reserved.`,
-      },
-    });
-
-    const emailBody = mailGenerator.generate({
-      body: {
-        name: firstName || email.split('@')[0],
-        intro: [
-          'Welcome to uFund!',
-          'One Platform to Power Your Investment Journey!',
-        ],
-        action: {
-          instructions:
-            'To get started with uFund, please confirm your account:',
-          button: {
-            color: '#22BC66',
-            text: 'Verify Your Email',
-            link: `${this.configService.get('BASE_URL')}/api/v1/auth/verify/${token}`,
-          },
-        },
-        outro:
-          'If you did not sign up for uFund, you can safely ignore this email.',
-      },
-    });
-
-    await transporter.sendMail({
-      from: this.configService.get('MAILTRAP_SENDEREMAIL'),
+    await this.emailService.send({
+      templateId: 'UFUND_AUTH_EMAIL_VERIFICATION_EN',
       to: email,
-      subject: 'Welcome to uFund! Confirm Your Email',
-      html: emailBody,
+      variables: {
+        firstName: firstName || email.split('@')[0],
+        lastName: lastName ?? '',
+        verificationUrl: verifyUrl,
+        expirationHours: 24,
+      },
     });
   }
 

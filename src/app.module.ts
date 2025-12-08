@@ -14,6 +14,7 @@ import { CampaignerModule } from './campaigner/campaigner.module';
 import { InvestorModule } from './investor/investor.module';
 
 import { CompanyModule } from './company/company.module';
+import { EmailModule } from './email/email.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { CompanyModule } from './company/company.module';
     CampaignerModule,
     InvestorModule,
     CompanyModule,
+    EmailModule,
   ],
   controllers: [AppController],
   providers: [AppService],

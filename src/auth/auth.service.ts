@@ -3,6 +3,7 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -20,6 +21,7 @@ import { ConfigService } from '@nestjs/config';
 import * as jwt from 'jsonwebtoken';
 import { RoleType, AdminRoleType } from '@prisma/client';
 import { AuthHelperService } from 'src/utils/auth.helper';
+import { userInfo } from 'os';
 
 @Injectable()
 export class AuthService {
@@ -70,7 +72,6 @@ export class AuthService {
     const existingUser = await this.prisma.user.findUnique({
       where: { email },
     });
-
     if (existingUser) {
       throw new ConflictException('Registration failed');
     }
@@ -78,30 +79,45 @@ export class AuthService {
     const hashedPassword = await bcrypt.hash(password, this.saltRounds);
     const verificationToken = crypto.randomBytes(32).toString('hex');
 
-    const user = await this.prisma.$transaction(async (prisma) => {
-      const newUser = await prisma.user.create({
-        data: {
-          email,
-          firstName,
-          lastName,
-          countryCode,
-          phoneNumber,
-          password: hashedPassword,
-          roles,
-          agreedToTerms,
-          isVerified: false,
-          verificationToken,
-        },
-      });
-      return newUser;
-    });
+    let user;
 
-    await this.authHelper.sendVerificationEmail(
-      user.email,
-      verificationToken,
-      user.firstName,
-      user.lastName,
-    );
+    try {
+      // Create user inside a transaction
+      user = await this.prisma.$transaction(async (prisma) => {
+        const newUser = await prisma.user.create({
+          data: {
+            email,
+            firstName,
+            lastName,
+            countryCode,
+            phoneNumber,
+            password: hashedPassword,
+            roles,
+            agreedToTerms,
+            isVerified: false,
+            verificationToken,
+          },
+        });
+        return newUser;
+      });
+
+      // Attempt to send verification email
+      await this.authHelper.sendVerificationEmail(
+        user.email,
+        verificationToken,
+        user.firstName,
+        user.lastName,
+      );
+    } catch (error) {
+      // Rollback user creation if email fails
+      if (user) {
+        await this.prisma.user.delete({ where: { id: user.id } });
+      }
+      throw new InternalServerErrorException(
+        'Registration failed: unable to send verification email. ' +
+          error.message,
+      );
+    }
 
     return {
       success: true,
@@ -121,31 +137,33 @@ export class AuthService {
         'Invalid credentials or unverified email',
       );
     }
-    const isInvestor = user.roles.includes(RoleType.investor);
-    // const isCampaigner = user.roles.includes(RoleType.campaigner);
-    if (isInvestor && activeRole === RoleType.campaigner) {
-      return {
-        success: false,
-        reason: 'REQUEST_SECOND_ROLE',
-        message: 'You can become a campaigner. Select type.',
-        options: ['INDIVIDUAL', 'COMPANY'],
-      };
-    }
-
-    console.log('User:', user);
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
+    const isInvestor = user.roles.includes(RoleType.investor);
+    const isCampaigner = user.roles.includes(RoleType.campaigner);
+    let userinfo: any = null;
+    if (activeRole === RoleType.campaigner && !isCampaigner) {
+      // DO NOT add campaigner role in DB
+      userinfo = {
+        success: false,
+        reason: 'REQUEST_SECOND_ROLE',
+        userInfo: { userId: user.id },
+        message: 'You can become a campaigner. Select type.',
+        options: ['INDIVIDUAL', 'COMPANY'],
+      };
+    } else if (activeRole === RoleType.investor && !isInvestor) {
+      console.log('User:', user);
 
-    if (!user.roles.includes(activeRole)) {
-      await this.prisma.user.update({
-        where: { id: user.id },
-        data: { roles: { set: [...user.roles, activeRole] } },
-      });
+      if (!user.roles.includes(activeRole)) {
+        await this.prisma.user.update({
+          where: { id: user.id },
+          data: { roles: { set: [...user.roles, activeRole] } },
+        });
+      }
     }
-
     const { accessToken, refreshToken } = await this.generateTokens(
       user,
       activeRole,
@@ -180,7 +198,7 @@ export class AuthService {
       },
     );
 
-    return { success: true, message: 'Login successful', activeRole };
+    return { success: true, userinfo, message: 'Login successful', activeRole };
   }
 
   async adminLogin(dto: AdminLoginDto, res: Response) {
@@ -345,7 +363,7 @@ export class AuthService {
     res.clearCookie(cookieName, {
       httpOnly: false,
       secure: this.configService.get('NODE_ENV') === 'production',
-      domain: '.ufund.online',
+      // domain: '.ufund.online',
       sameSite: 'none',
     });
     res.clearCookie('refreshToken', {

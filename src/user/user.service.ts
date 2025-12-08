@@ -212,25 +212,26 @@ export class UserService {
   async requestRole(userId: string, dto: RequestRoleDto) {
     const { role, actingAs } = dto;
 
-    // Only campaigner onboarding is allowed
+    // Only campaigner role can be requested
     if (role !== RoleType.campaigner) {
       throw new BadRequestException('Only CAMPAIGNER role can be requested.');
     }
 
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
+      include: { userCompanies: true }, // include companies linked to user
     });
 
     if (!user) {
-      throw new NotFoundException('User  not found.');
+      throw new NotFoundException('User not found.');
     }
 
-    // If user already has campaigner role, do not allow second onboarding
+    // Prevent duplicate campaigner onboarding
     if (user.roles.includes(RoleType.campaigner)) {
-      throw new BadRequestException('User is Already a campaigner.');
+      throw new BadRequestException('User is already a campaigner.');
     }
 
-    // Create an onboarding request entry
+    // Create onboarding request
     const onboardingRequest = await this.prisma.onboardingRequest.create({
       data: {
         userId,
@@ -240,15 +241,15 @@ export class UserService {
           actingAs === 'INDIVIDUAL' ? 'INDIVIDUAL_PENDING' : 'COMPANY_REQUIRED',
       },
     });
-
-    // Response for individual onboarding
+    // INDIVIDUAL FLOW
     if (actingAs === 'INDIVIDUAL') {
       const activeRole = RoleType.campaigner;
+
       await this.prisma.user.update({
         where: { id: user.id },
         data: { roles: { set: [...user.roles, activeRole] } },
       });
-      // }
+
       return {
         success: true,
         onboardingStatus: 'INDIVIDUAL_PENDING',
@@ -256,10 +257,28 @@ export class UserService {
         onboardingRequest,
       };
     }
+    // COMPANY FLOW
+    const hasCompany = user.userCompanies && user.userCompanies.length > 0;
 
-    // Response for company onboarding
+    if (hasCompany) {
+      // User already has a company linked → assign campaigner role
+      const activeRole = RoleType.campaigner;
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { roles: { set: [...user.roles, activeRole] } },
+      });
+
+      return {
+        success: true,
+        onboardingStatus: 'COMPANY_APPROVED',
+        message: 'Company onboarding complete. Campaigner role assigned.',
+        onboardingRequest,
+      };
+    }
+
+    // User has no company yet → ask them to create one
     return {
-      success: true,
+      success: false,
       onboardingStatus: 'COMPANY_REQUIRED',
       nextStep: 'CREATE_COMPANY',
       message: 'Please create your company.',

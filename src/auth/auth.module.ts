@@ -10,13 +10,20 @@ import { JwtModule } from '@nestjs/jwt';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AuthHelperService } from '../utils/auth.helper';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { FacebookStrategy, GoogleStrategy, LinkedInStrategy, TwitterStrategy } from './strategies/social.strategies';
+import {
+  FacebookStrategy,
+  GoogleStrategy,
+  LinkedInStrategy,
+  TwitterStrategy,
+} from './strategies/social.strategies';
 import { RolesGuard } from './guards/roles.guard';
+import { EmailModule } from '../email/email.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
     PrismaModule,
+    EmailModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -32,10 +39,12 @@ import { RolesGuard } from './guards/roles.guard';
       },
       inject: [ConfigService],
     }),
-    ThrottlerModule.forRoot([{
-      ttl: 60, // seconds
-      limit: 5,
-    }]),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60, // seconds
+        limit: 5,
+      },
+    ]),
   ],
   controllers: [AuthController],
   providers: [

@@ -7,6 +7,8 @@ import {
   Param,
   Delete,
   UseGuards,
+  UseInterceptors,
+  UploadedFiles,
 } from '@nestjs/common';
 import { CompanyService } from './company.service';
 import { CreateCompanyDto } from './dto/create-company.dto';
@@ -16,6 +18,7 @@ import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/auth/guards/roles.decorator';
 import { AdminRoleType, RoleType } from '@prisma/client';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { FilesInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('Company')
 @Controller('company')
@@ -23,10 +26,11 @@ export class CompanyController {
   constructor(private readonly CompanyService: CompanyService) {}
 
   @Post('create')
-  @Roles(RoleType.campaigner)
-  // @UseGuards(JwtAuthGuard, RolesGuard)
-  @ApiOperation({ summary: 'Create Company' })
-  create(@Body() createCompanyDto: CreateCompanyDto) {
-    return this.CompanyService.create(createCompanyDto);
+  @UseInterceptors(FilesInterceptor('documents'))
+  async createCompany(
+    @UploadedFiles() files: Express.Multer.File[],
+    @Body() body: CreateCompanyDto,
+  ) {
+    return this.CompanyService.createCompany(body, files);
   }
 }

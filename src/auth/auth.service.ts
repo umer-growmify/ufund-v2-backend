@@ -109,7 +109,7 @@ export class AuthService {
         user.lastName,
       );
     } catch (error) {
-      // Rollback user creation if email fails
+      // Rollback User creation if email fails
       if (user) {
         await this.prisma.user.delete({ where: { id: user.id } });
       }

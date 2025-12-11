@@ -1,3 +1,7 @@
+/* eslint-disable prettier/prettier */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable prettier/prettier */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 // import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 // import { PrismaService } from '../prisma/prisma.service';
 // import { EmailProvider } from '../types/email-provider.interface';
@@ -204,6 +208,7 @@ export class EmailService {
     const template = await this.prisma.emailTemplate.findUnique({
       where: { templateId: options.templateId },
     });
+    console.log(template);
 
     if (!template || !template.isActive) {
       throw new NotFoundException(`Template not found: ${options.templateId}`);
@@ -258,6 +263,7 @@ export class EmailService {
         where: { id: log.id },
         data: {
           status: EmailStatus.FAILED,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
           errorMessage: String(err?.message ?? 'Unknown error'),
         },
       });

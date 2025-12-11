@@ -245,6 +245,7 @@ model EmailTemplate {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   htmlFileName String
+  
 }
 
 model EmailLog {

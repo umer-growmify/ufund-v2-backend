@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { TemplateVariableDef } from '../../types/email-provider.interface';
 
 export function commonUserVars(): Record<string, TemplateVariableDef> {

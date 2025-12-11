@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 export const baseVariables = {
   appName: 'UFUND',
   logoUrl: 'https://web.ufund.online/assets/email/logo-ufund.png',

@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { commonUserVars } from './common-variables';
 
 export type TemplateVariableDef = {
@@ -18,31 +19,34 @@ export type TemplateConfig = {
 };
 
 export const EMAIL_TEMPLATES: Record<string, TemplateConfig> = {
-  // 1. AUTH / ONBOARDING
-
   UFUND_AUTH_EMAIL_VERIFICATION_EN: {
     templateId: 'UFUND_AUTH_EMAIL_VERIFICATION_EN',
-
     subject: 'Verify your {{appName}} email address',
-    htmlFileName: 'UFUND_AUTH_EMAIL_VERIFICATION_EN.html', // link to actual HTML
+    htmlFileName: 'UFUND_AUTH_EMAIL_VERIFICATION_EN.html',
     variables: {
       ...commonUserVars(),
-
-      verificationUrl: {
-        description: 'Unique verification link for email confirmation',
-
-        required: true,
-      },
-
-      expirationHours: {
-        description: 'Validity duration of the verification link (e.g. 24)',
-
-        required: true,
-      },
+      verificationUrl: { description: 'Unique verification link', required: true },
+      expirationHours: { description: 'Link expiry hours', required: true },
     },
     description: null,
     name: 'verify email',
   },
+
+
+  UFUND_WELCOME_EMAIL_EN: {
+    templateId: 'UFUND_WELCOME_EMAIL_EN',
+    subject: 'Welcome to {{appName}}!',
+    htmlFileName: 'UFUND_WELCOME_EMAIL_EN.html',
+    variables: {
+      ...commonUserVars(),
+      dashboardUrl: { description: 'Link to user dashboard', required: true },
+      currentYear: { description: 'Current year', required: true },
+    },
+    description: null,
+    name: 'welcome email',
+  },
+
+
 
   // UFUND_AUTH_WELCOME_EN: {
   //   templateId: 'UFUND_AUTH_WELCOME_EN',

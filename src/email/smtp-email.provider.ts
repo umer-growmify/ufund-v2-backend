@@ -1,7 +1,10 @@
+/* eslint-disable prettier/prettier */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable prettier/prettier */
 import { Injectable, Logger } from '@nestjs/common';
-
 import * as nodemailer from 'nodemailer';
-
 import {
   EmailProvider,
   EmailPayload,
@@ -16,32 +19,23 @@ export class SmtpEmailProvider implements EmailProvider {
 
   constructor() {
     this.transporter = nodemailer.createTransport({
-      host: process.env.MAILTRAP_HOST, // e.g. smtp.dreamhost.com
-
+      host: process.env.MAILTRAP_HOST,   // Gmail SMTP
       port: Number(process.env.MAILTRAP_PORT ?? 587),
-
-      secure: false,
-
+      secure: false, // Gmail uses STARTTLS
       auth: {
-        user: process.env.MAILTRAP_USERNAME,
-
-        pass: process.env.MAILTRAP_PASSWORD,
+        user: process.env.MAILTRAP_USERNAME, // Gmail address
+        pass: process.env.MAILTRAP_PASSWORD, // App password
       },
     });
   }
 
   async send(payload: EmailPayload): Promise<DeliveryResult> {
     const info = await this.transporter.sendMail({
-      from: process.env.EMAIL_FROM || '"UFUND" <no-reply@ufund.online>',
-
+      from: process.env.SMTP_FROM || '"UFUND" <no-reply@ufund.online>',
       to: payload.to,
-
       cc: payload.cc,
-
       bcc: payload.bcc,
-
       subject: payload.subject,
-
       html: payload.html,
     });
 
@@ -50,3 +44,4 @@ export class SmtpEmailProvider implements EmailProvider {
     return { providerMessageId: info.messageId };
   }
 }
+

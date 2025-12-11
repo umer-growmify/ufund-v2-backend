@@ -1,3 +1,9 @@
+/* eslint-disable prettier/prettier */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable prettier/prettier */
 import {
   BadRequestException,
   Injectable,
@@ -16,7 +22,7 @@ export class UserService {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-  ) {}
+  ) { }
   async getAllCampaigners() {
     const campaigners = await this.prisma.user.findMany({
       where: { roles: { has: 'campaigner' } }, // 👈 keep enum case consistent
@@ -172,12 +178,12 @@ export class UserService {
           activeRole: [newRole],
           expiresAt: new Date(
             Date.now() +
-              Number(
-                this.configService.get(
-                  'REFRESH_TOKEN_EXPIRY',
-                  7 * 24 * 60 * 60 * 1000,
-                ),
+            Number(
+              this.configService.get(
+                'REFRESH_TOKEN_EXPIRY',
+                7 * 24 * 60 * 60 * 1000,
               ),
+            ),
           ),
         },
       }),

@@ -1,3 +1,8 @@
+/* eslint-disable prettier/prettier */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable prettier/prettier */
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import e, { Response } from 'express';
 import * as Mailgen from 'mailgen';
@@ -89,6 +94,20 @@ export class AuthHelperService {
       },
     });
   }
+
+async sendWelcomeEmail(email: string, firstName?: string, lastName?: string) {
+  await this.emailService.send({
+    templateId: 'UFUND_WELCOME_EMAIL_EN',
+    to: email,
+    variables: {
+      firstName: firstName || email.split('@')[0],
+      lastName: lastName ?? '',
+      dashboardUrl: this.configService.get('DASHBOARD_URL') || 'https://web.ufund.online/dashboard',
+      currentYear: new Date().getFullYear(),
+    },
+  });
+}
+
 
   generateTokenAndSetCookie(
     entity: {

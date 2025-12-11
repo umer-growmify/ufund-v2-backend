@@ -1,3 +1,5 @@
+/* eslint-disable prettier/prettier */
+/* eslint-disable @typescript-eslint/no-redundant-type-constituents */
 // src/auth/guards/roles.decorator.ts
 import { SetMetadata } from '@nestjs/common';
 import { RoleType, AdminRoleType } from '@prisma/client';

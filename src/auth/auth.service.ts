@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable prettier/prettier */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 // src/auth/auth.service.ts
 import {
   BadRequestException,
@@ -377,21 +380,25 @@ export class AuthService {
   }
 
   async verifyUserEmail(token: string) {
-    const user = await this.prisma.user.findFirst({
-      where: { verificationToken: token },
-    });
+  const user = await this.prisma.user.findFirst({
+    where: { verificationToken: token },
+  });
 
-    if (!user) {
-      throw new NotFoundException('Invalid or expired verification token');
-    }
-
-    await this.prisma.user.update({
-      where: { id: user.id },
-      data: { isVerified: true, verificationToken: null },
-    });
-
-    return { success: true, message: 'Email verified successfully' };
+  if (!user) {
+    throw new NotFoundException('Invalid or expired verification token');
   }
+
+  await this.prisma.user.update({
+    where: { id: user.id },
+    data: { isVerified: true, verificationToken: null },
+  });
+
+  // Send welcome email AFTER verification
+  await this.authHelper.sendWelcomeEmail(user.email, user.firstName, user.lastName);
+
+  return { success: true, message: 'Email verified successfully' };
+}
+
 
   async checkAuth(user: any) {
     if (!user || !user.id) {

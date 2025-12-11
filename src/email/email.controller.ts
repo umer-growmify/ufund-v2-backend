@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Controller, Get, Post, Body, Query, Param } from '@nestjs/common';
 import { EmailService } from './email.service';
 import { EmailStatus } from '@prisma/client';
@@ -24,7 +25,7 @@ class ResendEmailDto {
 
 @Controller('emails')
 export class EmailController {
-  constructor(private readonly emailService: EmailService) {}
+  constructor(private readonly emailService: EmailService) { }
 
   @Post('preview')
   async preview(@Body() body: PreviewEmailDto) {

@@ -1,3 +1,10 @@
+/* eslint-disable prettier/prettier */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable prettier/prettier */
 import {
   BadRequestException,
   Body,
@@ -35,7 +42,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly configService: ConfigService,
-  ) {}
+  ) { }
 
   @Post('register')
   @Throttle({ default: { limit: 5, ttl: 60 } })
@@ -151,7 +158,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Google OAuth login (redirects to Google)' })
   @ApiQuery({ name: 'role', enum: RoleType, required: true })
   @UseGuards(AuthGuard('google'))
-  async googleAuth(@Query('role') role: RoleType) {}
+  async googleAuth(@Query('role') role: RoleType) { }
 
   @Get('google/callback')
   @ApiOperation({ summary: 'Google OAuth callback' })
@@ -170,7 +177,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Facebook OAuth login (redirects to Facebook)' })
   @ApiQuery({ name: 'role', enum: RoleType, required: true })
   @UseGuards(AuthGuard('facebook'))
-  async facebookAuth(@Query('role') role: RoleType) {}
+  async facebookAuth(@Query('role') role: RoleType) { }
 
   @Get('facebook/callback')
   @ApiOperation({ summary: 'Facebook OAuth callback' })
@@ -189,7 +196,7 @@ export class AuthController {
   @ApiOperation({ summary: 'LinkedIn OAuth login (redirects to LinkedIn)' })
   @ApiQuery({ name: 'role', enum: RoleType, required: true })
   @UseGuards(AuthGuard('linkedin'))
-  async linkedinAuth(@Query('role') role: RoleType) {}
+  async linkedinAuth(@Query('role') role: RoleType) { }
 
   @Get('linkedin/callback')
   @ApiOperation({ summary: 'LinkedIn OAuth callback' })
@@ -208,7 +215,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Twitter OAuth login (redirects to Twitter)' })
   @ApiQuery({ name: 'role', enum: RoleType, required: true })
   @UseGuards(AuthGuard('twitter'))
-  async twitterAuth(@Query('role') role: RoleType) {}
+  async twitterAuth(@Query('role') role: RoleType) { }
 
   @Get('twitter/callback')
   @ApiOperation({ summary: 'Twitter OAuth callback' })

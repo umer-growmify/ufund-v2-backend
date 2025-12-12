@@ -1,8 +1,9 @@
+/* eslint-disable prettier/prettier */
+/* eslint-disable prettier/prettier */
 import { commonUserVars } from './common-variables';
 
 export type TemplateVariableDef = {
   description: string;
-
   required: boolean;
 };
 
@@ -11,9 +12,7 @@ export type TemplateConfig = {
   name: string;
   htmlFileName: string;
   templateId: string;
-
   subject: string; // with placeholders, e.g. "Verify your {{appName}} email"
-
   variables: Record<string, TemplateVariableDef>;
 };
 
@@ -22,26 +21,36 @@ export const EMAIL_TEMPLATES: Record<string, TemplateConfig> = {
 
   UFUND_AUTH_EMAIL_VERIFICATION_EN: {
     templateId: 'UFUND_AUTH_EMAIL_VERIFICATION_EN',
-
     subject: 'Verify your {{appName}} email address',
     htmlFileName: 'UFUND_AUTH_EMAIL_VERIFICATION_EN.html', // link to actual HTML
     variables: {
       ...commonUserVars(),
-
       verificationUrl: {
         description: 'Unique verification link for email confirmation',
-
         required: true,
       },
-
       expirationHours: {
         description: 'Validity duration of the verification link (e.g. 24)',
-
         required: true,
       },
     },
     description: null,
     name: 'verify email',
+  },
+
+  UFUND_WELCOME_EN: {
+    templateId: 'UFUND_WELCOME_EMAIL_EN',
+    subject: 'Welcome to {{appName}}!',
+    htmlFileName: 'UFUND_WELCOME_EMAIL_EN.html',
+    variables: {
+      ...commonUserVars(),
+      dashboardUrl: {
+        description: 'URL to the user dashboard',
+        required: true,
+      },
+    },
+    description: null,
+    name: 'welcome email',
   },
 
   // UFUND_AUTH_WELCOME_EN: {

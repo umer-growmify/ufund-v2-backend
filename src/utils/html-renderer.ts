@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable prettier/prettier */
 // import * as fs from 'fs';
 // import * as path from 'path';
 // import { baseVariables } from '../email/templates/base-variables';
@@ -80,47 +84,63 @@
 
 //   return { html, subject };
 // }
+// src/utils/html-render.ts
 
 import * as fs from 'fs';
 import * as path from 'path';
-import * as Handlebars from 'handlebars';
 import { baseVariables } from '../email/templates/base-variables';
 
+/**
+ * Renders an email by combining a master layout with content from the DB.
+ * @param subject The email subject template with {{variables}}.
+ * @param contentTemplate The email body content template with {{variables}}.
+ * @param variables The variables to inject.
+ * @returns The final subject and HTML for the email.
+ */
 export function renderEmailFromContent(
-  subjectTemplate: string,
-  htmlTemplate: string,
-  variables: Record<string, any>,
+  subject: string,
+  contentTemplate: string,
+  variables: Record<string, any>
 ) {
+  // 1. Merge all variables
   const finalVars = {
     ...baseVariables,
     ...variables,
   };
 
-  // 1️⃣ Compile the INNER TEMPLATE (important!)
-  const innerTemplate = Handlebars.compile(htmlTemplate);
-  const compiledInnerHtml = innerTemplate(finalVars);
-
-  // 2️⃣ Load master layout
-  const masterPath = path.join(
-    process.cwd(),
-    'src/email/templates/html/master.html',
-  );
-
-  let masterHtml = '{{{content}}}';
-  if (fs.existsSync(masterPath)) {
-    masterHtml = fs.readFileSync(masterPath, 'utf-8');
+  // 2. Replace variables in the content template (e.g., the welcome message)
+  let renderedContent = contentTemplate;
+  for (const [key, value] of Object.entries(finalVars)) {
+    const regex = new RegExp(`{{${key}}}`, 'g');
+    renderedContent = renderedContent.replace(regex, String(value));
   }
 
-  // 3️⃣ Compile master with inner HTML injected
-  const master = Handlebars.compile(masterHtml);
-  const html = master({
-    ...finalVars,
-    content: compiledInnerHtml, // inner content goes here
+  // 3. Load the master template from the file system
+  // We use the same logic as your seeder to find the file reliably.
+  let masterPath = path.join(__dirname, '../email/templates/html/master.html');
+  if (!fs.existsSync(masterPath)) {
+    masterPath = path.join(process.cwd(), 'src/email/templates/html/master.html');
+  }
+  
+  if (!fs.existsSync(masterPath)) {
+    throw new Error(`Master template not found at: ${masterPath}`);
+  }
+
+  let masterHtml = fs.readFileSync(masterPath, 'utf8');
+
+  // 4. Inject the rendered content into the master template
+  masterHtml = masterHtml.replace('{{{emailContent}}}', renderedContent);
+
+  // 5. Replace variables in the master template (like {{subject}} in the <title> tag)
+  for (const [key, value] of Object.entries(finalVars)) {
+    const regex = new RegExp(`{{${key}}}`, 'g');
+    masterHtml = masterHtml.replace(regex, String(value));
+  }
+
+  // 6. Replace variables in the subject line
+  const finalSubject = subject.replace(/{{(\w+)}}/g, (match, key) => {
+    return finalVars[key] || match;
   });
 
-  // 4️⃣ Compile subject
-  const compiledSubject = Handlebars.compile(subjectTemplate);
-  const subject = compiledSubject(finalVars);
-
-  return { html, subject };
+  return { subject: finalSubject, html: masterHtml };
 }

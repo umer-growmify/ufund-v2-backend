@@ -376,6 +376,7 @@ export class AuthService {
     return { success: true, message: 'Logged out successfully' };
   }
 
+  
   async verifyUserEmail(token: string) {
     const user = await this.prisma.user.findFirst({
       where: { verificationToken: token },
@@ -390,8 +391,21 @@ export class AuthService {
       data: { isVerified: true, verificationToken: null },
     });
 
+    // Send welcome email after successful verification
+    try {
+      await this.authHelper.sendWelcomeEmail(
+        user.email,
+        user.firstName,
+        user.lastName,
+      );
+    } catch (error) {
+      console.error('Failed to send welcome email:', error);
+      // We don't want to fail the verification process if the welcome email fails
+    }
+
     return { success: true, message: 'Email verified successfully' };
   }
+
 
   async checkAuth(user: any) {
     if (!user || !user.id) {

@@ -1,3 +1,7 @@
+/* eslint-disable prettier/prettier */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable prettier/prettier */
 // import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 // import { PrismaService } from '../prisma/prisma.service';
 // import { EmailProvider } from '../types/email-provider.interface';

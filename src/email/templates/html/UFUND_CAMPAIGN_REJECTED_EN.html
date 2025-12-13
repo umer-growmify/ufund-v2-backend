@@ -5,7 +5,7 @@
     text-align: center;
     color: #d32f2f;
   ">
-    Investment Issue
+    Campaign Submission Not Approved
 </h1>
 
 <p style="
@@ -23,8 +23,16 @@
     line-height: 1.6;
     margin: 0 0 25px;
   ">
-    We were unable to process your investment of <strong>{{investmentAmount}}</strong> in the campaign
-    <strong>"{{campaignName}}"</strong>.
+    Unfortunately, your campaign <strong>"{{campaignName}}"</strong> was not approved.
+</p>
+
+<p style="
+    font-size: 16px;
+    color: #444444;
+    line-height: 1.6;
+    margin: 0 0 20px;
+  ">
+    <strong>Reason:</strong> {{rejectionReason}}
 </p>
 
 <p style="
@@ -33,20 +41,8 @@
     line-height: 1.6;
     margin: 0 0 25px;
   ">
-    Reason: <strong>{{failureReason}}</strong>
+    <strong>Next Steps:</strong> {{nextSteps}}
 </p>
-
-{{#if supportUrl}}
-<p style="
-    font-size: 16px;
-    color: #444444;
-    line-height: 1.6;
-    margin: 0 0 25px;
-  ">
-    For assistance, please visit our support center:
-    <a href="{{supportUrl}}" target="_blank">{{supportUrl}}</a>
-</p>
-{{/if}}
 
 <p style="
     font-size: 16px;
@@ -54,5 +50,5 @@
     line-height: 1.6;
     margin: 0;
   ">
-    We apologize for the inconvenience and are here to help you resolve this issue.
+    We encourage you to review the points above and resubmit your campaign for approval.
 </p>

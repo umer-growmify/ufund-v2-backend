@@ -1,0 +1,75 @@
+<h1 style="
+    font-size: 32px;
+    font-weight: bold;
+    margin: 0 0 30px;
+    text-align: center;
+    color: #2e7d32;
+  ">
+    Investment Confirmed
+</h1>
+
+<p style="
+    font-size: 16px;
+    color: #444444;
+    line-height: 1.6;
+    margin: 0 0 20px;
+  ">
+    Hello {{firstName}},
+</p>
+
+<p style="
+    font-size: 16px;
+    color: #444444;
+    line-height: 1.6;
+    margin: 0 0 25px;
+  ">
+    Your investment of <strong>{{investmentAmount}}</strong> in the campaign
+    <strong>"{{campaignName}}"</strong> has been successfully completed.
+</p>
+
+{{#if equityOrTokenAmount}}
+<p style="
+    font-size: 16px;
+    color: #444444;
+    line-height: 1.6;
+    margin: 0 0 25px;
+  ">
+    You have received: <strong>{{equityOrTokenAmount}}</strong>.
+</p>
+{{/if}}
+
+{{#if legalDocsUrl}}
+<p style="
+    font-size: 16px;
+    color: #444444;
+    line-height: 1.6;
+    margin: 0 0 25px;
+  ">
+    Access your legal documents here:
+    <a href="{{legalDocsUrl}}" target="_blank">{{legalDocsUrl}}</a>
+</p>
+{{/if}}
+
+<div style="text-align: center; margin: 30px 0">
+    <a href="{{portfolioUrl}}" target="_blank" style="
+      background-color: #1976d2;
+      color: white;
+      font-size: 18px;
+      font-weight: bold;
+      padding: 16px 40px;
+      text-decoration: none;
+      border-radius: 4px;
+      display: inline-block;
+    ">
+        View My Portfolio
+    </a>
+</div>
+
+<p style="
+    font-size: 16px;
+    color: #444444;
+    line-height: 1.6;
+    margin: 0;
+  ">
+    Thank you for investing with {{appName}}. We wish you a successful campaign journey!
+</p>

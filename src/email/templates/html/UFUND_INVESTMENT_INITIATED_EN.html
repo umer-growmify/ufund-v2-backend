@@ -1,0 +1,61 @@
+<h1 style="
+    font-size: 32px;
+    font-weight: bold;
+    margin: 0 0 30px;
+    text-align: center;
+    color: #2e7d32;
+  ">
+    Investment Initiated
+</h1>
+
+<p style="
+    font-size: 16px;
+    color: #444444;
+    line-height: 1.6;
+    margin: 0 0 20px;
+  ">
+    Hello {{firstName}},
+</p>
+
+<p style="
+    font-size: 16px;
+    color: #444444;
+    line-height: 1.6;
+    margin: 0 0 25px;
+  ">
+    Your investment of <strong>{{investmentAmount}} {{currencyCode}}</strong> in the campaign
+    <strong>"{{campaignName}}"</strong> has been successfully initiated.
+</p>
+
+<p style="
+    font-size: 16px;
+    color: #444444;
+    line-height: 1.6;
+    margin: 0 0 25px;
+  ">
+    Payment method used: <strong>{{paymentMethod}}</strong>
+</p>
+
+<div style="text-align: center; margin: 30px 0">
+    <a href="{{paymentInstructionsUrl}}" target="_blank" style="
+      background-color: #1976d2;
+      color: white;
+      font-size: 18px;
+      font-weight: bold;
+      padding: 16px 40px;
+      text-decoration: none;
+      border-radius: 4px;
+      display: inline-block;
+    ">
+        View Payment Instructions
+    </a>
+</div>
+
+<p style="
+    font-size: 16px;
+    color: #444444;
+    line-height: 1.6;
+    margin: 0;
+  ">
+    Thank you for investing with {{appName}}. We wish you a successful campaign journey!
+</p>
